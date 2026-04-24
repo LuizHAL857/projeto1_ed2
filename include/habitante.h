@@ -56,6 +56,16 @@ bool habitante_escrever_registro(Habitante habitante, void *registro_out,
  * Retorna o tamanho do registro persistido do habitante.
  */
 size_t habitante_tamanho_registro(void);
+/*
+ * Funcoes de acesso aos atributos do habitante.
+ *
+ * Para strings:
+ * - pode retornar NULL se o habitante for invalido
+ *
+ * Para sexo:
+ * - retorna 'M' ou 'F'
+ * - retorna '\0' se habitante for NULL
+ */
 
 const char *habitante_obter_cpf(Habitante habitante);
 const char *habitante_obter_nome(Habitante habitante);
