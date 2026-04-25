@@ -87,7 +87,7 @@ void he_fechar(HashExtensivel he);
  * Requisitos do registro:
  * - deve ter exatamente `he_tamanho_registro(he)` bytes
  * - deve comecar com a chave textual
- * - a chave deve ser alfanumerica, podendo conter tambem '-'
+ * - a chave deve ser alfanumerica, podendo conter tambem '-' e '.'
  *
  * Retorna `true` em caso de sucesso e `false` em caso de erro ou chave
  * duplicada.

@@ -46,7 +46,7 @@ static bool cep_valido(const char *cep) {
     for (i = 0; i < tamanho; i++) {
         unsigned char c = (unsigned char)cep[i];
         if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
-              (c >= 'a' && c <= 'z') || c == '-')) {
+              (c >= 'a' && c <= 'z') || c == '-' || c == '.')) {
             return false;
         }
     }

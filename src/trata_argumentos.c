@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int caminho_absoluto(const char *caminho) {
+  return caminho != NULL && caminho[0] == '/';
+}
 
 char *obter_valor_opcao(int argc, char *argv[], char *nome_opcao) {
   char formato_opcao[64];
@@ -63,4 +66,45 @@ char *obter_sufixo_comando(int argc, char *argv[]) {
 
   free(argv_copia);
   return sufixo;
+}
+
+char *montar_caminho_entrada(const char *diretorio_base, const char *nome_arquivo) {
+  size_t tamanho_base;
+  size_t tamanho_arquivo;
+  int precisa_barra;
+  char *caminho;
+
+  if (nome_arquivo == NULL) {
+    return NULL;
+  }
+
+  if (caminho_absoluto(nome_arquivo)) {
+    caminho = (char *)malloc(strlen(nome_arquivo) + 1u);
+    if (caminho != NULL) {
+      strcpy(caminho, nome_arquivo);
+    }
+    return caminho;
+  }
+
+  if (diretorio_base == NULL || diretorio_base[0] == '\0') {
+    diretorio_base = ".";
+  }
+
+  tamanho_base = strlen(diretorio_base);
+  tamanho_arquivo = strlen(nome_arquivo);
+  precisa_barra = tamanho_base > 0u && diretorio_base[tamanho_base - 1u] != '/';
+
+  caminho = (char *)malloc(tamanho_base + (precisa_barra ? 1u : 0u) +
+                           tamanho_arquivo + 1u);
+  if (caminho == NULL) {
+    return NULL;
+  }
+
+  memcpy(caminho, diretorio_base, tamanho_base);
+  if (precisa_barra) {
+    caminho[tamanho_base] = '/';
+    tamanho_base++;
+  }
+  memcpy(caminho + tamanho_base, nome_arquivo, tamanho_arquivo + 1u);
+  return caminho;
 }

@@ -160,7 +160,7 @@ static int chave_valida_texto(const char *chave) {
 
     for (i = 0; i < tamanho; i++) {
         unsigned char c = (unsigned char)chave[i];
-        if (!isalnum(c) && c != '-') {
+        if (!isalnum(c) && c != '-' && c != '.') {
             return 0;
         }
     }

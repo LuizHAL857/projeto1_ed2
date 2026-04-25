@@ -40,6 +40,14 @@ void test_quadra_criar_deve_inicializar_campos(void) {
     assert_quadra(quadra, "Q-01", 10.0, 20.0, 30.0, 40.0, "2px", "gold", "black");
 }
 
+void test_quadra_criar_deve_aceitar_cep_com_ponto(void) {
+    Quadra com_ponto =
+        quadra_criar("b01.1", 1.0, 2.0, 3.0, 4.0, "1px", "white", "black");
+
+    assert_quadra(com_ponto, "b01.1", 1.0, 2.0, 3.0, 4.0, "1px", "white", "black");
+    quadra_destruir(com_ponto);
+}
+
 void test_quadra_criar_deve_rejeitar_parametros_invalidos(void) {
     TEST_ASSERT_NULL(quadra_criar(NULL, 1.0, 2.0, 3.0, 4.0, "1", "a", "b"));
     TEST_ASSERT_NULL(quadra_criar("", 1.0, 2.0, 3.0, 4.0, "1", "a", "b"));
@@ -99,6 +107,7 @@ int main(void) {
     UNITY_BEGIN();
 
     RUN_TEST(test_quadra_criar_deve_inicializar_campos);
+    RUN_TEST(test_quadra_criar_deve_aceitar_cep_com_ponto);
     RUN_TEST(test_quadra_criar_deve_rejeitar_parametros_invalidos);
     RUN_TEST(test_quadra_definir_estilo_deve_atualizar_cores_e_espessura);
     RUN_TEST(test_quadra_registro_deve_preservar_dados_em_roundtrip);

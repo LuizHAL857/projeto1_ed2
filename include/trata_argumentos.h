@@ -49,4 +49,18 @@ char *obter_valor_opcao(int argc, char *argv[], char *nome_opcao);
  */
 char *obter_sufixo_comando(int argc, char *argv[]);
 
+/*
+ * Monta o caminho completo de um arquivo de entrada a partir do BED.
+ *
+ * Regras:
+ * - se `nome_arquivo` for absoluto, retorna uma copia dele
+ * - se `diretorio_base` for NULL ou vazio, usa o diretorio corrente `.`
+ * - o chamador deve liberar a string retornada com `free`
+ *
+ * Retorno:
+ * - string alocada dinamicamente com o caminho completo
+ * - NULL em caso de erro ou se `nome_arquivo` for NULL
+ */
+char *montar_caminho_entrada(const char *diretorio_base, const char *nome_arquivo);
+
 #endif

@@ -56,6 +56,7 @@ bool habitante_escrever_registro(Habitante habitante, void *registro_out,
  * Retorna o tamanho do registro persistido do habitante.
  */
 size_t habitante_tamanho_registro(void);
+
 /*
  * Funcoes de acesso aos atributos do habitante.
  *
@@ -67,10 +68,10 @@ size_t habitante_tamanho_registro(void);
  * - retorna '\0' se habitante for NULL
  */
 
-const char *habitante_obter_cpf(Habitante habitante);
-const char *habitante_obter_nome(Habitante habitante);
-const char *habitante_obter_sobrenome(Habitante habitante);
-char habitante_obter_sexo(Habitante habitante);
-const char *habitante_obter_nasc(Habitante habitante);
+ const char *habitante_obter_cpf(Habitante habitante);
+ const char *habitante_obter_nome(Habitante habitante);
+ const char *habitante_obter_sobrenome(Habitante habitante);
+ char habitante_obter_sexo(Habitante habitante);
+ const char *habitante_obter_nasc(Habitante habitante);
 
 #endif

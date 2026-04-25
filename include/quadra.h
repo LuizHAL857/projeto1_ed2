@@ -33,6 +33,8 @@ typedef void *Quadra;
  *
  * Retorna NULL quando algum parametro textual for invalido, quando `w` ou `h`
  * forem menores ou iguais a zero, ou em caso de falta de memoria.
+ *
+ * O CEP aceita letras, digitos, '-' e '.'.
  */
 Quadra quadra_criar(const char *cep, double x, double y, double w, double h,
                     const char *sw, const char *cfill, const char *cstrk);

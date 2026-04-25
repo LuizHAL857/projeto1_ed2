@@ -10,6 +10,7 @@ APP = ../ted
 
 APP_SRCS = $(SRC_DIR)/main.c \
 	$(SRC_DIR)/trata_argumentos.c \
+	$(SRC_DIR)/trata_geo.c \
 	$(SRC_DIR)/hash_extensivel.c \
 	$(SRC_DIR)/quadra.c \
 	$(SRC_DIR)/habitante.c \
@@ -18,6 +19,7 @@ APP_SRCS = $(SRC_DIR)/main.c \
 
 APP_OBJS = $(BUILD_DIR)/main.o \
 	$(BUILD_DIR)/trata_argumentos.o \
+	$(BUILD_DIR)/trata_geo.o \
 	$(BUILD_DIR)/hash_extensivel.o \
 	$(BUILD_DIR)/quadra.o \
 	$(BUILD_DIR)/habitante.o \
@@ -28,6 +30,7 @@ TEST_HASH_BIN = $(BUILD_DIR)/test_hash_extensivel
 TEST_QUADRA_BIN = $(BUILD_DIR)/test_quadra
 TEST_HABITANTE_BIN = $(BUILD_DIR)/test_habitante
 TEST_TRATA_BIN = $(BUILD_DIR)/test_trata_argumentos
+TEST_TRATA_GEO_BIN = $(BUILD_DIR)/test_trata_geo
 TEST_LISTA_BIN = $(BUILD_DIR)/test_lista
 TEST_LEITOR_BIN = $(BUILD_DIR)/test_leitor_arquivos
 
@@ -45,6 +48,9 @@ $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/trata_argumentos.o: $(SRC_DIR)/trata_argumentos.c ../include/trata_argumentos.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/trata_geo.o: $(SRC_DIR)/trata_geo.c ../include/trata_geo.h ../include/hash_extensivel.h ../include/leitor_arquivos.h ../include/quadra.h ../include/lista.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/hash_extensivel.o: $(SRC_DIR)/hash_extensivel.c ../include/hash_extensivel.h | $(BUILD_DIR)
@@ -74,19 +80,23 @@ $(TEST_HABITANTE_BIN): $(SRC_DIR)/habitante.c $(SRC_DIR)/hash_extensivel.c $(TES
 $(TEST_TRATA_BIN): $(SRC_DIR)/trata_argumentos.c $(TEST_DIR)/test_trata_argumentos.c $(UNITY_DIR)/unity.c ../include/trata_argumentos.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRC_DIR)/trata_argumentos.c $(TEST_DIR)/test_trata_argumentos.c $(UNITY_DIR)/unity.c -o $@
 
+$(TEST_TRATA_GEO_BIN): $(SRC_DIR)/trata_geo.c $(SRC_DIR)/leitor_arquivos.c $(SRC_DIR)/lista.c $(SRC_DIR)/quadra.c $(SRC_DIR)/hash_extensivel.c $(TEST_DIR)/test_trata_geo.c $(UNITY_DIR)/unity.c ../include/trata_geo.h ../include/leitor_arquivos.h ../include/lista.h ../include/quadra.h ../include/hash_extensivel.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(SRC_DIR)/trata_geo.c $(SRC_DIR)/leitor_arquivos.c $(SRC_DIR)/lista.c $(SRC_DIR)/quadra.c $(SRC_DIR)/hash_extensivel.c $(TEST_DIR)/test_trata_geo.c $(UNITY_DIR)/unity.c -o $@
+
 $(TEST_LISTA_BIN): $(SRC_DIR)/lista.c $(TEST_DIR)/test_lista.c $(UNITY_DIR)/unity.c ../include/lista.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRC_DIR)/lista.c $(TEST_DIR)/test_lista.c $(UNITY_DIR)/unity.c -o $@
 
 $(TEST_LEITOR_BIN): $(SRC_DIR)/leitor_arquivos.c $(SRC_DIR)/lista.c $(TEST_DIR)/test_leitor_arquivos.c $(UNITY_DIR)/unity.c ../include/leitor_arquivos.h ../include/lista.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRC_DIR)/leitor_arquivos.c $(SRC_DIR)/lista.c $(TEST_DIR)/test_leitor_arquivos.c $(UNITY_DIR)/unity.c -o $@
 
-test: $(TEST_HASH_BIN) $(TEST_QUADRA_BIN) $(TEST_HABITANTE_BIN) $(TEST_TRATA_BIN) $(TEST_LISTA_BIN) $(TEST_LEITOR_BIN)
+test: $(TEST_HASH_BIN) $(TEST_QUADRA_BIN) $(TEST_HABITANTE_BIN) $(TEST_TRATA_BIN) $(TEST_TRATA_GEO_BIN) $(TEST_LISTA_BIN) $(TEST_LEITOR_BIN)
 
 run-tests: test
 	./$(TEST_HASH_BIN)
 	./$(TEST_QUADRA_BIN)
 	./$(TEST_HABITANTE_BIN)
 	./$(TEST_TRATA_BIN)
+	./$(TEST_TRATA_GEO_BIN)
 	./$(TEST_LISTA_BIN)
 	./$(TEST_LEITOR_BIN)
 
