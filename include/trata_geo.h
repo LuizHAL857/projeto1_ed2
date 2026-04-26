@@ -6,7 +6,7 @@
  *
  * O contrato publico foi mantido enxuto:
  * - `processa_geo(...)` executa todos os comandos do `.geo` e gera o SVG
- *   inicial
+ *   inicial, alem do dump textual `.hfd` da hash de quadras
  * - `trata_geo_destruir(...)` desaloca o estado criado
  * - `trata_geo_obter_quadra(...)` permite acesso por CEP
  * - `trata_geo_obter_nome_geo(...)` expoe o nome-base do `.geo`, util para os
@@ -19,11 +19,13 @@
 typedef void *TrataGeo;
 
 /*
- * Processa um arquivo `.geo` e gera o SVG inicial no diretorio de saida.
+ * Processa um arquivo `.geo` e gera os artefatos iniciais no diretorio de
+ * saida.
  *
  * Regras adotadas:
  * - o nome do SVG inicial e `<nome-base-do-geo>.svg`
  * - as quadras sao mantidas em hashfile no diretorio de saida
+ * - um dump textual da hash e salvo como `<nome-base-do-geo>-quadras.hfd`
  * - em caso de falha, retorna NULL
  *
  * Parametros:

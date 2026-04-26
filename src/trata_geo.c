@@ -21,6 +21,7 @@ typedef struct {
     char *nome_geo;
     char *caminho_svg_inicial;
     char *caminho_hash_quadras;
+    char *caminho_dump_quadras;
     char sw_atual[QUADRA_TAMANHO_ESPESSURA_MAX + 1];
     char cfill_atual[QUADRA_TAMANHO_COR_MAX + 1];
     char cstrk_atual[QUADRA_TAMANHO_COR_MAX + 1];
@@ -93,6 +94,9 @@ static void calcular_limites_svg(Lista quadras, double *min_x, double *min_y,
 /* Gera o SVG inicial com o estado da cidade apos o .geo. */
 static bool escrever_svg_inicial(TrataGeoImpl *trata_geo);
 
+/* Gera um dump textual legivel da hash de quadras. */
+static bool escrever_dump_quadras(TrataGeoImpl *trata_geo);
+
 /* Inicializa caminhos, listas, estilo e hash usados pelo processamento. */
 static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo,
                                const char *caminho_output);
@@ -107,7 +111,8 @@ TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output) {
 
     if (!preparar_estrutura(trata_geo, dados_geo, caminho_output) ||
         !processar_linhas_geo(trata_geo, dados_geo) ||
-        !escrever_svg_inicial(trata_geo)) {
+        !escrever_svg_inicial(trata_geo) ||
+        !escrever_dump_quadras(trata_geo)) {
         destruir_impl(trata_geo, true);
         return NULL;
     }
@@ -305,6 +310,9 @@ static void destruir_impl(TrataGeoImpl *trata_geo, bool remover_arquivos) {
     }
 
     if (trata_geo->quadras != NULL) {
+        if (!remover_arquivos && trata_geo->caminho_dump_quadras != NULL) {
+            he_dump(trata_geo->quadras, trata_geo->caminho_dump_quadras);
+        }
         he_fechar(trata_geo->quadras);
         trata_geo->quadras = NULL;
     }
@@ -321,6 +329,10 @@ static void destruir_impl(TrataGeoImpl *trata_geo, bool remover_arquivos) {
         }
     }
 
+    if (remover_arquivos && trata_geo->caminho_dump_quadras != NULL) {
+        remove(trata_geo->caminho_dump_quadras);
+    }
+
     free(caminho_controle);
     if (trata_geo->lista_svg != NULL) {
         liberaLista(trata_geo->lista_svg);
@@ -329,6 +341,7 @@ static void destruir_impl(TrataGeoImpl *trata_geo, bool remover_arquivos) {
     free(trata_geo->nome_geo);
     free(trata_geo->caminho_svg_inicial);
     free(trata_geo->caminho_hash_quadras);
+    free(trata_geo->caminho_dump_quadras);
     free(trata_geo);
 }
 
@@ -568,6 +581,24 @@ static bool escrever_svg_inicial(TrataGeoImpl *trata_geo) {
     return true;
 }
 
+static bool escrever_dump_quadras(TrataGeoImpl *trata_geo) {
+    FILE *arquivo_dump;
+
+    if (trata_geo == NULL || trata_geo->quadras == NULL ||
+        trata_geo->caminho_dump_quadras == NULL) {
+        return false;
+    }
+
+    he_dump(trata_geo->quadras, trata_geo->caminho_dump_quadras);
+    arquivo_dump = fopen(trata_geo->caminho_dump_quadras, "r");
+    if (arquivo_dump == NULL) {
+        return false;
+    }
+
+    fclose(arquivo_dump);
+    return true;
+}
+
 static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo,
                                const char *caminho_output) {
     const char *nome_arquivo_geo;
@@ -586,11 +617,14 @@ static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo
         montar_caminho_saida(caminho_output, trata_geo->nome_geo, ".svg");
     trata_geo->caminho_hash_quadras =
         montar_caminho_saida(caminho_output, trata_geo->nome_geo, "-quadras.hf");
+    trata_geo->caminho_dump_quadras =
+        montar_caminho_saida(caminho_output, trata_geo->nome_geo, "-quadras.hfd");
     trata_geo->lista_quadras = criaLista();
     trata_geo->lista_svg = criaLista();
 
     if (trata_geo->caminho_svg_inicial == NULL || trata_geo->caminho_hash_quadras == NULL ||
-        trata_geo->lista_quadras == NULL || trata_geo->lista_svg == NULL ||
+        trata_geo->caminho_dump_quadras == NULL || trata_geo->lista_quadras == NULL ||
+        trata_geo->lista_svg == NULL ||
         !inicializar_estilo_padrao(trata_geo)) {
         return false;
     }

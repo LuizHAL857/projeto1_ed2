@@ -287,6 +287,75 @@ static int bucket_buscar_posicao(const HashExtensivelImpl *he,
     return -1;
 }
 
+static int comparar_offsets(const void *esquerda, const void *direita) {
+    int64_t a = *(const int64_t *)esquerda;
+    int64_t b = *(const int64_t *)direita;
+
+    if (a < b) {
+        return -1;
+    }
+    if (a > b) {
+        return 1;
+    }
+    return 0;
+}
+
+static size_t coletar_offsets_unicos_ordenados(const HashExtensivelImpl *he,
+                                               int64_t **offsets_out) {
+    size_t tamanho_diretorio;
+    int64_t *offsets;
+    size_t quantidade = 0;
+    size_t i;
+    size_t j;
+    int repetido;
+
+    if (he == NULL || offsets_out == NULL) {
+        return 0;
+    }
+
+    *offsets_out = NULL;
+    tamanho_diretorio = potencia2(he->profundidade_global);
+    offsets = (int64_t *)malloc(sizeof(int64_t) * tamanho_diretorio);
+    if (offsets == NULL) {
+        return 0;
+    }
+
+    for (i = 0; i < tamanho_diretorio; i++) {
+        repetido = 0;
+        for (j = 0; j < quantidade; j++) {
+            if (offsets[j] == he->diretorio[i]) {
+                repetido = 1;
+                break;
+            }
+        }
+
+        if (!repetido) {
+            offsets[quantidade++] = he->diretorio[i];
+        }
+    }
+
+    qsort(offsets, quantidade, sizeof(int64_t), comparar_offsets);
+    *offsets_out = offsets;
+    return quantidade;
+}
+
+static long long indice_bloco_por_offset(const int64_t *offsets, size_t quantidade,
+                                         int64_t offset) {
+    size_t i;
+
+    if (offsets == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i < quantidade; i++) {
+        if (offsets[i] == offset) {
+            return (long long)i;
+        }
+    }
+
+    return -1;
+}
+
 static bool registrar_expansao(HashExtensivelImpl *he, int64_t offset_antigo,
                                int64_t offset_novo, uint64_t profundidade_local_antiga,
                                uint64_t profundidade_local_nova) {
@@ -809,6 +878,8 @@ size_t he_tamanho_registro(HashExtensivel he_handle) {
 void he_dump(HashExtensivel he_handle, const char *caminho_dump) {
     HashExtensivelImpl *he = he_impl(he_handle);
     FILE *saida;
+    int64_t *offsets_unicos = NULL;
+    size_t quantidade_buckets;
     size_t tamanho_diretorio;
     size_t i;
 
@@ -821,75 +892,95 @@ void he_dump(HashExtensivel he_handle, const char *caminho_dump) {
         return;
     }
 
+    quantidade_buckets = coletar_offsets_unicos_ordenados(he, &offsets_unicos);
+    if (offsets_unicos == NULL && potencia2(he->profundidade_global) > 0u) {
+        fclose(saida);
+        return;
+    }
+
     tamanho_diretorio = potencia2(he->profundidade_global);
-    fprintf(saida, "Hash extensivel\n");
-    fprintf(saida, "Arquivo .hf: %s\n", he->caminho_hf != NULL ? he->caminho_hf : "(desconhecido)");
-    fprintf(saida, "Arquivo .hfc: %s\n",
-            he->caminho_hfc != NULL ? he->caminho_hfc : "(desconhecido)");
-    fprintf(saida, "Profundidade global: %llu\n", (unsigned long long)he->profundidade_global);
-    fprintf(saida, "Capacidade bucket: %llu\n", (unsigned long long)he->capacidade_bucket);
-    fprintf(saida, "Tamanho registro: %llu\n", (unsigned long long)he->tamanho_registro);
-    fprintf(saida, "Quantidade registros: %llu\n", (unsigned long long)he->tamanho);
-    fprintf(saida, "Quantidade expansoes: %llu\n",
-            (unsigned long long)he->quantidade_expansoes);
-    fprintf(saida, "Diretorio:\n");
+    fprintf(saida, "DUMP\n");
+    fprintf(saida, "*Dump cabecalho\n");
+    fprintf(saida, "numBucketsd %zu \n", quantidade_buckets);
+    fprintf(saida, "sizeRecordd %llu \n", (unsigned long long)he->tamanho_registro);
+    fprintf(saida, "sizeBlock %zu \n", bytes_bucket(he));
+    fprintf(saida, "offsetKey 0 \n");
+    fprintf(saida, "sizeKey %u \n", (unsigned int)HE_TAMANHO_CHAVE_MAX);
+    fprintf(saida, "offsetTable -1 \n");
+    fprintf(saida, "offsetBuckets 0 \n");
+    fprintf(saida, "offsetOverflow -1\n");
+    fprintf(saida, "* Dump table\n");
 
     for (i = 0; i < tamanho_diretorio; i++) {
-        fprintf(saida, "  [%zu] -> %lld\n", i, (long long)he->diretorio[i]);
+        fprintf(saida, "[%zu] %lld\n", i, (long long)he->diretorio[i]);
     }
 
-    fprintf(saida, "Expansoes:\n");
-    if (he->quantidade_expansoes == 0) {
-        fprintf(saida, "  (nenhuma expansao registrada)\n");
-    }
-    for (i = 0; i < (size_t)he->quantidade_expansoes; i++) {
-        const ExpansaoBucketDisco *expansao = &he->expansoes[i];
-
-        fprintf(saida,
-                "  [%zu] bucket %lld -> %lld | prof_local %llu -> %llu | prof_global %llu\n",
-                i, (long long)expansao->offset_bucket_antigo,
-                (long long)expansao->offset_bucket_novo,
-                (unsigned long long)expansao->profundidade_local_antiga,
-                (unsigned long long)expansao->profundidade_local_nova,
-                (unsigned long long)expansao->profundidade_global_apos);
-    }
-
-    fprintf(saida, "Buckets:\n");
-    for (i = 0; i < tamanho_diretorio; i++) {
+    fprintf(saida, "*Dump buckets\n");
+    for (i = 0; i < quantidade_buckets; i++) {
         BucketDisco *bucket;
-        size_t j;
-        int repetido = 0;
         size_t k;
         char chave[HE_TAMANHO_CHAVE_MAX + 1];
+        int ocupado;
+        unsigned long long hash_chave;
 
-        for (j = 0; j < i; j++) {
-            if (he->diretorio[j] == he->diretorio[i]) {
-                repetido = 1;
-                break;
-            }
-        }
-        if (repetido) {
-            continue;
-        }
-
-        bucket = bucket_carregar(he, he->diretorio[i]);
+        bucket = bucket_carregar(he, offsets_unicos[i]);
         if (bucket == NULL) {
             continue;
         }
 
-        fprintf(saida, "  Bucket @ %lld\n", (long long)he->diretorio[i]);
-        fprintf(saida, "    Profundidade local: %llu\n",
-                (unsigned long long)bucket->profundidade_local);
-        fprintf(saida, "    Quantidade: %llu\n",
-                (unsigned long long)bucket->quantidade);
-        for (k = 0; k < bucket->quantidade; k++) {
-            if (extrair_chave_do_registro(he, entrada_ptr_const(he, bucket, k), chave)) {
-                fprintf(saida, "    - %s\n", chave);
+        fprintf(saida, "BLOCO: %zu\n", i);
+        for (k = 0; k < he->capacidade_bucket; k++) {
+            ocupado = (k < (size_t)bucket->quantidade) &&
+                      extrair_chave_do_registro(he, entrada_ptr_const(he, bucket, k), chave);
+            if (ocupado) {
+                hash_chave = (unsigned long long)hash_texto(chave);
+                fprintf(saida, "1 | %llu | %s | -1 |\n", hash_chave, chave);
+            } else {
+                fprintf(saida, "0 | 0 | (vazio) | -1 |\n");
             }
         }
 
         free(bucket);
     }
 
+    fprintf(saida, "*Dump expansoes\n");
+    if (he->quantidade_expansoes == 0) {
+        fprintf(saida, "(nenhuma expansao registrada)\n");
+    }
+    for (i = 0; i < (size_t)he->quantidade_expansoes; i++) {
+        const ExpansaoBucketDisco *expansao = &he->expansoes[i];
+
+        fprintf(saida,
+                "[%zu] BLOCO %lld (%lld) -> BLOCO %lld (%lld) | prof_local %llu -> %llu | "
+                "prof_global %llu\n",
+                i,
+                indice_bloco_por_offset(offsets_unicos, quantidade_buckets,
+                                        expansao->offset_bucket_antigo),
+                (long long)expansao->offset_bucket_antigo,
+                indice_bloco_por_offset(offsets_unicos, quantidade_buckets,
+                                        expansao->offset_bucket_novo),
+                (long long)expansao->offset_bucket_novo,
+                (unsigned long long)expansao->profundidade_local_antiga,
+                (unsigned long long)expansao->profundidade_local_nova,
+                (unsigned long long)expansao->profundidade_global_apos);
+    }
+
+    fprintf(saida, "*Resumo hash extensivel\n");
+    fprintf(saida, "Arquivo .hf: %s\n",
+            he->caminho_hf != NULL ? he->caminho_hf : "(desconhecido)");
+    fprintf(saida, "Arquivo .hfc: %s\n",
+            he->caminho_hfc != NULL ? he->caminho_hfc : "(desconhecido)");
+    fprintf(saida, "Profundidade global: %llu\n",
+            (unsigned long long)he->profundidade_global);
+    fprintf(saida, "Capacidade bucket: %llu\n",
+            (unsigned long long)he->capacidade_bucket);
+    fprintf(saida, "Tamanho registro: %llu\n",
+            (unsigned long long)he->tamanho_registro);
+    fprintf(saida, "Quantidade registros: %llu\n",
+            (unsigned long long)he->tamanho);
+    fprintf(saida, "Quantidade expansoes: %llu\n",
+            (unsigned long long)he->quantidade_expansoes);
+
+    free(offsets_unicos);
     fclose(saida);
 }

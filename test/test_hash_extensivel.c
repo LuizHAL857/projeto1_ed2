@@ -126,6 +126,31 @@ static int ler_quantidade_expansoes_do_dump(const char *caminho_dump) {
     return quantidade;
 }
 
+static char *ler_arquivo_texto(const char *caminho) {
+    FILE *arquivo = fopen(caminho, "r");
+    long tamanho;
+    char *conteudo;
+
+    if (arquivo == NULL) {
+        return NULL;
+    }
+
+    TEST_ASSERT_EQUAL_INT(0, fseek(arquivo, 0L, SEEK_END));
+    tamanho = ftell(arquivo);
+    TEST_ASSERT_TRUE(tamanho >= 0);
+    TEST_ASSERT_EQUAL_INT(0, fseek(arquivo, 0L, SEEK_SET));
+
+    conteudo = (char *)calloc((size_t)tamanho + 1u, sizeof(char));
+    TEST_ASSERT_NOT_NULL(conteudo);
+    if (tamanho > 0) {
+        TEST_ASSERT_EQUAL_size_t((size_t)tamanho,
+                                 fread(conteudo, 1u, (size_t)tamanho, arquivo));
+    }
+
+    fclose(arquivo);
+    return conteudo;
+}
+
 void setUp(void) {
     remove(ARQ_HASH);
     remove(ARQ_CONTROLE);
@@ -206,6 +231,7 @@ void test_he_split_e_reabertura_devem_preservar_registros_completos(void) {
     char chaves[6][32];
     RegistroPessoaTeste esperados[6];
     RegistroPessoaTeste obtido;
+    char *dump;
     int contador = 0;
     int profundidade_dump;
     int quantidade_expansoes_dump;
@@ -220,6 +246,17 @@ void test_he_split_e_reabertura_devem_preservar_registros_completos(void) {
     }
 
     he_dump(he, ARQ_DUMP);
+    dump = ler_arquivo_texto(ARQ_DUMP);
+    TEST_ASSERT_NOT_NULL(dump);
+    TEST_ASSERT_NOT_NULL(strstr(dump, "DUMP"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump cabecalho"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "* Dump table"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump buckets"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump expansoes"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Resumo hash extensivel"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "BLOCO: 0"));
+    free(dump);
+
     profundidade_dump = ler_profundidade_do_dump(ARQ_DUMP);
     quantidade_expansoes_dump = ler_quantidade_expansoes_do_dump(ARQ_DUMP);
     TEST_ASSERT_GREATER_OR_EQUAL(1, profundidade_dump);

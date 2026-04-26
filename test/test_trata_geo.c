@@ -17,6 +17,7 @@ static const char *DIR_SAIDA = "trata_geo_saida";
 static const char *ARQ_SVG = "trata_geo_saida/trata_geo_entrada.svg";
 static const char *ARQ_HASH = "trata_geo_saida/trata_geo_entrada-quadras.hf";
 static const char *ARQ_CONTROLE = "trata_geo_saida/trata_geo_entrada-quadras.hfc";
+static const char *ARQ_DUMP = "trata_geo_saida/trata_geo_entrada-quadras.hfd";
 
 static TrataGeo processamento;
 static DadosDoArquivo dados_geo;
@@ -74,6 +75,7 @@ void setUp(void) {
     remove(ARQ_SVG);
     remove(ARQ_HASH);
     remove(ARQ_CONTROLE);
+    remove(ARQ_DUMP);
     remove(ARQ_GEO);
     rmdir(DIR_SAIDA);
 
@@ -89,19 +91,22 @@ void tearDown(void) {
     remove(ARQ_SVG);
     remove(ARQ_HASH);
     remove(ARQ_CONTROLE);
+    remove(ARQ_DUMP);
     remove(ARQ_GEO);
     rmdir(DIR_SAIDA);
 }
 
 void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     Quadra quadra;
+    char *dump;
     char *svg;
 
     sobrescrever_geo(
         "cq 2px beige brown\n"
         "q Q1 10 20 30 40\n"
         "cq 3px gold navy\n"
-        "q Q2 100 120 50 60\n");
+        "q Q2 100 120 50 60\n"
+        "q Q3 150 180 30 30\n");
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
@@ -113,6 +118,7 @@ void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_SVG));
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_HASH));
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_CONTROLE));
+    TEST_ASSERT_TRUE(arquivo_existe(ARQ_DUMP));
 
     quadra = trata_geo_obter_quadra(processamento, "Q2");
     TEST_ASSERT_NOT_NULL(quadra);
@@ -133,10 +139,25 @@ void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     TEST_ASSERT_NOT_NULL(strstr(svg, "Q2"));
     TEST_ASSERT_NOT_NULL(strstr(svg, "gold"));
     TEST_ASSERT_NOT_NULL(strstr(svg, "navy"));
-    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"-21.00\" y=\"27.00\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"-16.00\" y=\"-8.00\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "fill-opacity=\"0.70\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "font-weight=\"bold\""));
     free(svg);
+
+    dump = ler_arquivo_texto(ARQ_DUMP);
+    TEST_ASSERT_NOT_NULL(dump);
+    TEST_ASSERT_NOT_NULL(strstr(dump, "DUMP"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump cabecalho"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "* Dump table"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump buckets"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Dump expansoes"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "*Resumo hash extensivel"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "Arquivo .hf: trata_geo_saida/trata_geo_entrada-quadras.hf"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "BLOCO: 0"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "| Q1 |"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "| Q2 |"));
+    TEST_ASSERT_NOT_NULL(strstr(dump, "| Q3 |"));
+    free(dump);
 }
 
 void test_processa_geo_deve_aceitar_cep_com_ponto(void) {
@@ -203,6 +224,7 @@ void test_processa_geo_deve_falhar_para_comando_invalido_sem_deixar_saida_valida
     processamento = processa_geo(dados_geo, DIR_SAIDA);
     TEST_ASSERT_NULL(processamento);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_SVG));
+    TEST_ASSERT_FALSE(arquivo_existe(ARQ_DUMP));
 }
 
 void test_processa_geo_deve_falhar_para_cep_duplicado(void) {
@@ -216,6 +238,7 @@ void test_processa_geo_deve_falhar_para_cep_duplicado(void) {
     processamento = processa_geo(dados_geo, DIR_SAIDA);
     TEST_ASSERT_NULL(processamento);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_SVG));
+    TEST_ASSERT_FALSE(arquivo_existe(ARQ_DUMP));
 }
 
 int main(void) {
