@@ -118,7 +118,7 @@ void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_SVG));
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_HASH));
     TEST_ASSERT_TRUE(arquivo_existe(ARQ_CONTROLE));
-    TEST_ASSERT_TRUE(arquivo_existe(ARQ_DUMP));
+    TEST_ASSERT_FALSE(arquivo_existe(ARQ_DUMP));
 
     quadra = trata_geo_obter_quadra(processamento, "Q2");
     TEST_ASSERT_NOT_NULL(quadra);
@@ -143,6 +143,10 @@ void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     TEST_ASSERT_NOT_NULL(strstr(svg, "fill-opacity=\"0.70\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "font-weight=\"bold\""));
     free(svg);
+
+    trata_geo_destruir(processamento);
+    processamento = NULL;
+    TEST_ASSERT_TRUE(arquivo_existe(ARQ_DUMP));
 
     dump = ler_arquivo_texto(ARQ_DUMP);
     TEST_ASSERT_NOT_NULL(dump);
