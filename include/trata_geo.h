@@ -14,6 +14,7 @@
  */
 
 #include "leitor_arquivos.h"
+#include "lista.h"
 #include "quadra.h"
 
 typedef void *TrataGeo;
@@ -25,7 +26,8 @@ typedef void *TrataGeo;
  * Regras adotadas:
  * - o nome do SVG inicial e `<nome-base-do-geo>.svg`
  * - as quadras sao mantidas em hashfile no diretorio de saida
- * - um dump textual da hash e salvo como `<nome-base-do-geo>-quadras.hfd`
+ * - o dump textual `<nome-base-do-geo>-quadras.hfd` e gerado apenas ao final
+ *   da execucao, durante `trata_geo_destruir(...)`
  * - em caso de falha, retorna NULL
  *
  * Parametros:
@@ -54,5 +56,25 @@ Quadra trata_geo_obter_quadra(TrataGeo trata_geo, const char *cep);
  * Retorna o nome-base do arquivo `.geo`, sem extensao.
  */
 const char *trata_geo_obter_nome_geo(TrataGeo trata_geo);
+
+/*
+ * Retorna uma nova lista com clones de todas as quadras ativas.
+ *
+ * Ownership:
+ * - a lista retornada pertence ao chamador
+ * - cada elemento deve ser liberado com `quadra_destruir(...)`
+ * - a propria lista deve ser liberada com `liberaLista(...)`
+ *
+ * Retorna NULL em caso de erro.
+ */
+Lista trata_geo_listar_quadras(TrataGeo trata_geo);
+
+/*
+ * Remove a quadra de um CEP do estado atual.
+ *
+ * Retorna true quando a quadra existia e foi removida da hash e das estruturas
+ * em memoria. Retorna false se o CEP nao existir ou em caso de erro.
+ */
+bool trata_geo_remover_quadra(TrataGeo trata_geo, const char *cep);
 
 #endif

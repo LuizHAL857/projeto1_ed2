@@ -45,8 +45,7 @@ typedef void *HashExtensivel;
  * Cria uma nova hash extensivel vazia.
  *
  * Parametros:
- * - caminho_hf: caminho do arquivo principal do hash, obrigatoriamente com a
- *   extensao `.hf`
+ * - caminho_hf: caminho do arquivo principal do hash
  * - capacidade_bucket: quantidade maxima de registros por bucket
  * - tamanho_registro: quantidade exata de bytes de cada registro
  *
@@ -128,7 +127,7 @@ size_t he_tamanho_registro(HashExtensivel he);
 /*
  * Gera um dump textual legivel da estrutura.
  *
- * O dump deve ser salvo, preferencialmente, com a extensao `.hfd` e inclui:
+ * O dump deve ser salvo com a extensao `.hfd` e inclui:
  * - informacoes gerais da hash
  * - diretorio atual
  * - buckets fisicos

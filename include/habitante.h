@@ -10,10 +10,14 @@
  * - sobrenome
  * - sexo (`M` ou `F`)
  * - data de nascimento
+ * - opcionalmente, um endereco de moradia (`cep`, `face`, `num`, `compl`)
  *
- * A interface publica usa apenas um tipo opaco. O formato persistido do
- * habitante fica escondido na implementacao e pode ser convertido para um
- * bloco fixo de bytes compativel com o modulo `hash_extensivel`.
+ * A interface publica usa apenas um tipo opaco.
+ *
+ *
+ * A conversao entre essas duas representacoes acontece por meio de:
+ * - `habitante_escrever_registro(...)`
+ * - `habitante_criar_de_bytes(...)`
  */
 
 #include "hash_extensivel.h"
@@ -24,14 +28,16 @@
 #define HABITANTE_TAMANHO_NOME_MAX 63u
 #define HABITANTE_TAMANHO_SOBRENOME_MAX 63u
 #define HABITANTE_TAMANHO_NASC_MAX 15u
+#define HABITANTE_TAMANHO_COMPLEMENTO_MAX 63u
 
 typedef void *Habitante;
 
 /*
  * Cria um habitante.
  *
- * Retorna NULL quando algum campo textual for invalido, quando o sexo nao for
- * `M` nem `F`, ou em caso de falta de memoria.
+ * Retorna NULL quando algum campo textual for invalido, quando o CPF contiver
+ * caracteres fora do formato aceito (alfanumericos, `-` e `.`), quando o sexo
+ * nao for `M` nem `F`, ou em caso de falta de memoria.
  */
 Habitante habitante_criar(const char *cpf, const char *nome, const char *sobrenome,
                           char sexo, const char *nasc);
@@ -58,6 +64,26 @@ bool habitante_escrever_registro(Habitante habitante, void *registro_out,
 size_t habitante_tamanho_registro(void);
 
 /*
+ * Define ou atualiza a moradia do habitante.
+ *
+ * Retorna false quando o habitante for invalido, quando o CEP for invalido,
+ * quando a face nao pertencer ao conjunto `{N, S, L, O}`, quando `num` for
+ * negativo ou quando o complemento for invalido.
+ */
+bool habitante_definir_moradia(Habitante habitante, const char *cep, char face,
+                               int num, const char *compl);
+
+/*
+ * Remove a associacao de moradia do habitante, tornando-o sem-teto.
+ */
+void habitante_remover_moradia(Habitante habitante);
+
+/*
+ * Indica se o habitante possui uma moradia associada.
+ */
+bool habitante_eh_morador(Habitante habitante);
+
+/*
  * Funcoes de acesso aos atributos do habitante.
  *
  * Para strings:
@@ -73,5 +99,9 @@ size_t habitante_tamanho_registro(void);
  const char *habitante_obter_sobrenome(Habitante habitante);
  char habitante_obter_sexo(Habitante habitante);
  const char *habitante_obter_nasc(Habitante habitante);
+ const char *habitante_obter_cep(Habitante habitante);
+ char habitante_obter_face(Habitante habitante);
+ int habitante_obter_num(Habitante habitante);
+ const char *habitante_obter_compl(Habitante habitante);
 
 #endif
