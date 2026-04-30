@@ -31,6 +31,9 @@ static TrataGeoImpl *trata_geo_impl(TrataGeo trata_geo) {
     return (TrataGeoImpl *)trata_geo;
 }
 
+/* Cria uma copia independente de uma quadra. */
+static Quadra clonar_quadra(Quadra quadra);
+
 /* Valida se uma string nao vazia cabe no limite informado. */
 static bool texto_valido(const char *texto, size_t tamanho_maximo);
 
@@ -94,9 +97,6 @@ static void calcular_limites_svg(Lista quadras, double *min_x, double *min_y,
 /* Gera o SVG inicial com o estado da cidade apos o .geo. */
 static bool escrever_svg_inicial(TrataGeoImpl *trata_geo);
 
-/* Gera um dump textual legivel da hash de quadras. */
-static bool escrever_dump_quadras(TrataGeoImpl *trata_geo);
-
 /* Inicializa caminhos, listas, estilo e hash usados pelo processamento. */
 static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo,
                                const char *caminho_output);
@@ -111,8 +111,7 @@ TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output) {
 
     if (!preparar_estrutura(trata_geo, dados_geo, caminho_output) ||
         !processar_linhas_geo(trata_geo, dados_geo) ||
-        !escrever_svg_inicial(trata_geo) ||
-        !escrever_dump_quadras(trata_geo)) {
+        !escrever_svg_inicial(trata_geo)) {
         destruir_impl(trata_geo, true);
         return NULL;
     }
@@ -151,6 +150,81 @@ Quadra trata_geo_obter_quadra(TrataGeo trata_geo, const char *cep) {
 const char *trata_geo_obter_nome_geo(TrataGeo trata_geo) {
     TrataGeoImpl *impl = trata_geo_impl(trata_geo);
     return impl == NULL ? NULL : impl->nome_geo;
+}
+
+Lista trata_geo_listar_quadras(TrataGeo trata_geo) {
+    TrataGeoImpl *impl = trata_geo_impl(trata_geo);
+    Lista copia;
+    Celula atual;
+
+    if (impl == NULL || impl->lista_quadras == NULL) {
+        return NULL;
+    }
+
+    copia = criaLista();
+    if (copia == NULL) {
+        return NULL;
+    }
+
+    atual = getInicioLista(impl->lista_quadras);
+    while (atual != NULL) {
+        Quadra original = (Quadra)getConteudoCelula(atual);
+        Quadra clone = clonar_quadra(original);
+
+        if (clone == NULL) {
+            liberar_quadras_em_memoria(copia);
+            return NULL;
+        }
+
+        insereFinalLista(copia, clone);
+        atual = getProxCelula(atual);
+    }
+
+    return copia;
+}
+
+bool trata_geo_remover_quadra(TrataGeo trata_geo, const char *cep) {
+    TrataGeoImpl *impl = trata_geo_impl(trata_geo);
+    Celula atual;
+    Quadra alvo = NULL;
+
+    if (impl == NULL || impl->quadras == NULL || impl->lista_quadras == NULL ||
+        impl->lista_svg == NULL || cep == NULL) {
+        return false;
+    }
+
+    atual = getInicioLista(impl->lista_quadras);
+    while (atual != NULL) {
+        Quadra quadra = (Quadra)getConteudoCelula(atual);
+        if (quadra != NULL && strcmp(quadra_obter_cep(quadra), cep) == 0) {
+            alvo = quadra;
+            break;
+        }
+        atual = getProxCelula(atual);
+    }
+
+    if (alvo == NULL || !he_remover(impl->quadras, cep)) {
+        return false;
+    }
+
+    if (!removeElementoLista(impl->lista_quadras, alvo) ||
+        !removeElementoLista(impl->lista_svg, alvo)) {
+        return false;
+    }
+
+    quadra_destruir(alvo);
+    return true;
+}
+
+static Quadra clonar_quadra(Quadra quadra) {
+    if (quadra == NULL) {
+        return NULL;
+    }
+
+    return quadra_criar(quadra_obter_cep(quadra), quadra_obter_x(quadra),
+                        quadra_obter_y(quadra), quadra_obter_w(quadra),
+                        quadra_obter_h(quadra), quadra_obter_sw(quadra),
+                        quadra_obter_cfill(quadra), quadra_obter_cstrk(quadra));
 }
 
 static bool texto_valido(const char *texto, size_t tamanho_maximo) {
@@ -578,24 +652,6 @@ static bool escrever_svg_inicial(TrataGeoImpl *trata_geo) {
     }
 
     fclose(arquivo);
-    return true;
-}
-
-static bool escrever_dump_quadras(TrataGeoImpl *trata_geo) {
-    FILE *arquivo_dump;
-
-    if (trata_geo == NULL || trata_geo->quadras == NULL ||
-        trata_geo->caminho_dump_quadras == NULL) {
-        return false;
-    }
-
-    he_dump(trata_geo->quadras, trata_geo->caminho_dump_quadras);
-    arquivo_dump = fopen(trata_geo->caminho_dump_quadras, "r");
-    if (arquivo_dump == NULL) {
-        return false;
-    }
-
-    fclose(arquivo_dump);
     return true;
 }
 

@@ -517,6 +517,56 @@ void test_processa_qry_deve_aceitar_rip_repetido_sem_abortar_processamento(void)
     free(svg);
 }
 
+void test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto(void) {
+    Habitante habitante;
+    char *txt;
+
+    sobrescrever_arquivo(
+        ARQ_GEO,
+        "q b01.1 100 100 40 20\n"
+        "q b01.2 180 100 40 20\n");
+    sobrescrever_arquivo(
+        ARQ_PM,
+        "p cpf-001 Ana Silva F 10/01/1999\n"
+        "m cpf-001 b01.1 N 10 apto1\n");
+    sobrescrever_arquivo(
+        ARQ_QRY,
+        "mud cpf-001 b01.2 Face.L 1 fundos\n"
+        "h? cpf-001\n");
+
+    dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
+    TEST_ASSERT_NOT_NULL(dados_geo);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    TEST_ASSERT_NOT_NULL(processamento_geo);
+
+    dados_pm = criar_dados_arquivo((char *)ARQ_PM);
+    TEST_ASSERT_NOT_NULL(dados_pm);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    TEST_ASSERT_NOT_NULL(processamento_pm);
+
+    dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
+    TEST_ASSERT_NOT_NULL(dados_qry);
+    processamento_qry = processa_qry(dados_qry, processamento_geo, processamento_pm,
+                                     DIR_SAIDA);
+    TEST_ASSERT_NOT_NULL(processamento_qry);
+
+    habitante = trata_pm_obter_habitante(processamento_pm, "cpf-001");
+    TEST_ASSERT_NOT_NULL(habitante);
+    TEST_ASSERT_TRUE(habitante_eh_morador(habitante));
+    TEST_ASSERT_EQUAL_STRING("b01.2", habitante_obter_cep(habitante));
+    TEST_ASSERT_EQUAL_CHAR('L', habitante_obter_face(habitante));
+    TEST_ASSERT_EQUAL_INT(1, habitante_obter_num(habitante));
+    TEST_ASSERT_EQUAL_STRING("fundos", habitante_obter_compl(habitante));
+    habitante_destruir(habitante);
+
+    txt = ler_arquivo_texto(ARQ_TXT_FINAL);
+    TEST_ASSERT_NOT_NULL(txt);
+    TEST_ASSERT_NOT_NULL(strstr(txt, "[*] mud cpf-001 b01.2 Face.L 1 fundos"));
+    TEST_ASSERT_NOT_NULL(strstr(txt, "[*] h? cpf-001"));
+    TEST_ASSERT_NOT_NULL(strstr(txt, "endereco: b01.2/L/1 fundos"));
+    free(txt);
+}
+
 void test_processa_qry_deve_falhar_para_comando_invalido_sem_deixar_saidas(void) {
     sobrescrever_arquivo(
         ARQ_GEO,
@@ -556,6 +606,7 @@ int main(void) {
     RUN_TEST(test_processa_qry_deve_executar_h_nasc_rip_mud_e_dspj);
     RUN_TEST(test_processa_qry_deve_aceitar_dspj_repetido_sem_abortar_processamento);
     RUN_TEST(test_processa_qry_deve_aceitar_rip_repetido_sem_abortar_processamento);
+    RUN_TEST(test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto);
     RUN_TEST(test_processa_qry_deve_falhar_para_comando_invalido_sem_deixar_saidas);
 
     return UNITY_END();
