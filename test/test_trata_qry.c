@@ -312,7 +312,10 @@ void test_processa_qry_deve_posicionar_faces_conforme_orientacao_visual_do_svg(v
     sobrescrever_arquivo(
         ARQ_QRY,
         "pq b01.1\n"
-        "dspj cpf-001\n");
+        "dspj cpf-001\n"
+        "dspj cpf-003\n"
+        "rip cpf-004\n"
+        "mud cpf-002 b01.1 O 7 apto2\n");
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
@@ -335,9 +338,12 @@ void test_processa_qry_deve_posicionar_faces_conforme_orientacao_visual_do_svg(v
     TEST_ASSERT_NOT_NULL(strstr(svg, "<circle cx=\"70.00\" cy=\"100.00\""));
     TEST_ASSERT_NULL(strstr(svg, "<circle cx=\"70.00\" cy=\"80.00\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"96.00\" text-anchor=\"middle\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<circle cx=\"60.00\" cy=\"92.00\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<line x1=\"96.00\" y1=\"89.00\" x2=\"104.00\" y2=\"97.00\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<rect x=\"96.00\" y=\"83.00\" width=\"8.00\" height=\"8.00\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"92.00\" text-anchor=\"middle\""));
-    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"96.00\" y=\"90.00\" text-anchor=\"end\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"64.00\" y=\"90.00\" text-anchor=\"start\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"96.00\" y=\"90.00\" text-anchor=\"end\""));
     free(svg);
 }
 

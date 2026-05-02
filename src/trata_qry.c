@@ -717,10 +717,10 @@ static bool calcular_ponto_endereco(TrataQryImpl *trata_qry, const char *cep, ch
         *x = esquerda + (double)num;
         *y = topo;
     } else if (face == 'L') {
-        *x = direita;
+        *x = esquerda;
         *y = topo + (double)num;
     } else if (face == 'O') {
-        *x = esquerda;
+        *x = direita;
         *y = topo + (double)num;
     } else {
         quadra_destruir(quadra);
@@ -1150,16 +1150,16 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.leste);
-    if (!adicionar_texto_svg(trata_qry, direita - TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
-                             "end", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, esquerda + TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
+                             "start", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.oeste);
-    if (!adicionar_texto_svg(trata_qry, esquerda + TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
-                             "start", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, direita - TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
+                             "end", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
