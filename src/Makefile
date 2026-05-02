@@ -6,7 +6,7 @@ TEST_DIR = ../test
 UNITY_DIR = ../unity
 BUILD_DIR = ../build
 
-APP = ../ted
+APP = ./ted
 
 APP_SRCS = $(SRC_DIR)/main.c \
 	$(SRC_DIR)/trata_argumentos.c \

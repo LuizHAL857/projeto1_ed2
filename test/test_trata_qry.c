@@ -210,7 +210,10 @@ void test_processa_qry_deve_executar_rq_pq_e_censo(void) {
     TEST_ASSERT_NOT_NULL(strstr(svg, "<svg"));
     TEST_ASSERT_NOT_NULL(strstr(svg, "b01.2"));
     TEST_ASSERT_NULL(strstr(svg, ">b01.1</text>"));
-    TEST_ASSERT_NOT_NULL(strstr(svg, "stroke=\"red\""));
+    TEST_ASSERT_NOT_NULL(
+        strstr(svg, "<line x1=\"60.00\" y1=\"80.00\" x2=\"100.00\" y2=\"100.00\" stroke=\"red\""));
+    TEST_ASSERT_NOT_NULL(
+        strstr(svg, "<line x1=\"60.00\" y1=\"100.00\" x2=\"100.00\" y2=\"80.00\" stroke=\"red\""));
     TEST_ASSERT_NOT_NULL(strstr(svg, ">1</text>"));
     free(svg);
 
@@ -300,8 +303,12 @@ void test_processa_qry_deve_posicionar_faces_conforme_orientacao_visual_do_svg(v
         ARQ_PM,
         "p cpf-001 Ana Silva F 10/01/1999\n"
         "p cpf-002 Beto Souza M 11/02/2000\n"
+        "p cpf-003 Caio Lima M 12/03/2001\n"
+        "p cpf-004 Dora Melo F 13/04/2002\n"
         "m cpf-001 b01.1 N 10 apto1\n"
-        "m cpf-002 b01.1 S 11 casa\n");
+        "m cpf-002 b01.1 S 11 casa\n"
+        "m cpf-003 b01.1 L 12 fundos\n"
+        "m cpf-004 b01.1 O 13 casa\n");
     sobrescrever_arquivo(
         ARQ_QRY,
         "pq b01.1\n"
@@ -327,8 +334,10 @@ void test_processa_qry_deve_posicionar_faces_conforme_orientacao_visual_do_svg(v
     TEST_ASSERT_NOT_NULL(svg);
     TEST_ASSERT_NOT_NULL(strstr(svg, "<circle cx=\"70.00\" cy=\"100.00\""));
     TEST_ASSERT_NULL(strstr(svg, "<circle cx=\"70.00\" cy=\"80.00\""));
-    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"112.00\""));
-    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"77.00\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"96.00\" text-anchor=\"middle\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"80.00\" y=\"92.00\" text-anchor=\"middle\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"96.00\" y=\"90.00\" text-anchor=\"end\""));
+    TEST_ASSERT_NOT_NULL(strstr(svg, "<text x=\"64.00\" y=\"90.00\" text-anchor=\"start\""));
     free(svg);
 }
 

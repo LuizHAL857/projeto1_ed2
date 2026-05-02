@@ -13,6 +13,7 @@
 #define TRATA_QRY_X_TAMANHO 4.0
 #define TRATA_QRY_QUADRADO_TAMANHO 8.0
 #define TRATA_QRY_CIRCULO_RAIO 3.0
+#define TRATA_QRY_MARGEM_TEXTO_FACE 4.0
 
 typedef enum {
     ANOTACAO_LINHA,
@@ -1074,14 +1075,12 @@ static bool executar_rq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     }
 
     if (fprintf(txt, "\n") < 0 ||
-        !adicionar_linha_svg(trata_qry, quadra_obter_x(quadra) - TRATA_QRY_X_TAMANHO,
-                             quadra_obter_y(quadra) - TRATA_QRY_X_TAMANHO,
-                             quadra_obter_x(quadra) + TRATA_QRY_X_TAMANHO,
-                             quadra_obter_y(quadra) + TRATA_QRY_X_TAMANHO, "red") ||
-        !adicionar_linha_svg(trata_qry, quadra_obter_x(quadra) - TRATA_QRY_X_TAMANHO,
-                             quadra_obter_y(quadra) + TRATA_QRY_X_TAMANHO,
-                             quadra_obter_x(quadra) + TRATA_QRY_X_TAMANHO,
-                             quadra_obter_y(quadra) - TRATA_QRY_X_TAMANHO, "red")) {
+        !adicionar_linha_svg(trata_qry, quadra_obter_x(quadra) - quadra_obter_w(quadra),
+                             quadra_obter_y(quadra) - quadra_obter_h(quadra),
+                             quadra_obter_x(quadra), quadra_obter_y(quadra), "red") ||
+        !adicionar_linha_svg(trata_qry, quadra_obter_x(quadra) - quadra_obter_w(quadra),
+                             quadra_obter_y(quadra), quadra_obter_x(quadra),
+                             quadra_obter_y(quadra) - quadra_obter_h(quadra), "red")) {
         liberar_habitantes_clonados(afetados);
         quadra_destruir(quadra);
         return false;
@@ -1136,28 +1135,31 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     centro_y = topo + quadra_obter_h(quadra) / 2.0;
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.norte);
-    if (!adicionar_texto_svg(trata_qry, centro_x, base + 12.0, "middle", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, centro_x, base - TRATA_QRY_MARGEM_TEXTO_FACE,
+                             "middle", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.sul);
-    if (!adicionar_texto_svg(trata_qry, centro_x, topo - 3.0, "middle", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, centro_x, topo + 12.0, "middle", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.leste);
-    if (!adicionar_texto_svg(trata_qry, direita + 4.0, centro_y, "start", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, direita - TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
+                             "end", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.oeste);
-    if (!adicionar_texto_svg(trata_qry, esquerda - 4.0, centro_y, "end", "black", buffer)) {
+    if (!adicionar_texto_svg(trata_qry, esquerda + TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
+                             "start", "black", buffer)) {
         liberar_habitantes_clonados(habitantes);
         quadra_destruir(quadra);
         return false;
