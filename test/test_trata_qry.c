@@ -544,7 +544,7 @@ void test_processa_qry_deve_aceitar_rip_repetido_sem_abortar_processamento(void)
     free(svg);
 }
 
-void test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto(void) {
+void test_processa_qry_deve_aceitar_mud_com_direcao_minuscula(void) {
     Habitante habitante;
     char *txt;
 
@@ -558,7 +558,7 @@ void test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto(void) {
         "m cpf-001 b01.1 N 10 apto1\n");
     sobrescrever_arquivo(
         ARQ_QRY,
-        "mud cpf-001 b01.2 Face.L 1 fundos\n"
+        "mud cpf-001 b01.2 l 1 fundos\n"
         "h? cpf-001\n");
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
@@ -589,7 +589,7 @@ void test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto(void) {
 
     txt = ler_arquivo_texto(ARQ_TXT_FINAL);
     TEST_ASSERT_NOT_NULL(txt);
-    TEST_ASSERT_NOT_NULL(strstr(txt, "[*] mud cpf-001 b01.2 Face.L 1 fundos"));
+    TEST_ASSERT_NOT_NULL(strstr(txt, "[*] mud cpf-001 b01.2 l 1 fundos"));
     TEST_ASSERT_NOT_NULL(strstr(txt, "[*] h? cpf-001"));
     TEST_ASSERT_NOT_NULL(strstr(txt, "endereco: b01.2/L/1 fundos"));
     free(txt);
@@ -635,7 +635,7 @@ int main(void) {
     RUN_TEST(test_processa_qry_deve_executar_h_nasc_rip_mud_e_dspj);
     RUN_TEST(test_processa_qry_deve_aceitar_dspj_repetido_sem_abortar_processamento);
     RUN_TEST(test_processa_qry_deve_aceitar_rip_repetido_sem_abortar_processamento);
-    RUN_TEST(test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto);
+    RUN_TEST(test_processa_qry_deve_aceitar_mud_com_direcao_minuscula);
     RUN_TEST(test_processa_qry_deve_falhar_para_comando_invalido_sem_deixar_saidas);
 
     return UNITY_END();

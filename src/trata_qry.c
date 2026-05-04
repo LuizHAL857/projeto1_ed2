@@ -70,9 +70,6 @@ typedef struct {
 static TrataQryImpl *trata_qry_impl(TrataQry trata_qry) {
     return (TrataQryImpl *)trata_qry;
 }
-//FUnções de liberar memória
-static void liberar_habitantes_clonados(Lista habitantes);
-static void liberar_quadras_clonadas(Lista quadras);
 static void liberar_anotacoes(Lista anotacoes);
 static void destruir_impl(TrataQryImpl *trata_qry, bool remover_arquivos);
 
@@ -100,7 +97,6 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry);
 static bool escrever_cabecalho_consulta(FILE *txt, const char *linha);
 static bool escrever_dados_habitante(FILE *txt, Habitante habitante,
                                      const char *rotulo_endereco);
-static bool interpretar_face_token(const char *token, char *face_out);
 static bool calcular_ponto_endereco(TrataQryImpl *trata_qry, const char *cep, char face,
                                     int num, double *x, double *y);
 
@@ -150,32 +146,6 @@ void trata_qry_destruir(TrataQry trata_qry) {
 const char *trata_qry_obter_nome_qry(TrataQry trata_qry) {
     TrataQryImpl *impl = trata_qry_impl(trata_qry);
     return impl == NULL ? NULL : impl->nome_qry;
-}
-
-static void liberar_habitantes_clonados(Lista habitantes) {
-    if (habitantes == NULL) {
-        return;
-    }
-
-    while (!listaVazia(habitantes)) {
-        Habitante habitante = (Habitante)removeInicioLista(habitantes);
-        habitante_destruir(habitante);
-    }
-
-    liberaLista(habitantes);
-}
-
-static void liberar_quadras_clonadas(Lista quadras) {
-    if (quadras == NULL) {
-        return;
-    }
-
-    while (!listaVazia(quadras)) {
-        Quadra quadra = (Quadra)removeInicioLista(quadras);
-        quadra_destruir(quadra);
-    }
-
-    liberaLista(quadras);
 }
 
 static void liberar_anotacoes(Lista anotacoes) {
@@ -427,7 +397,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
 
     arquivo = fopen(trata_qry->caminho_svg_final, "w");
     if (arquivo == NULL) {
-        liberar_quadras_clonadas(quadras);
+        trata_geo_liberar_quadras(quadras);
         return false;
     }
 
@@ -437,7 +407,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                 min_x - TRATA_QRY_MARGEM_SVG, min_y - TRATA_QRY_MARGEM_SVG,
                 largura, altura) < 0) {
         fclose(arquivo);
-        liberar_quadras_clonadas(quadras);
+        trata_geo_liberar_quadras(quadras);
         return false;
     }
 
@@ -460,7 +430,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                     "stroke-width=\"0.45\" paint-order=\"stroke\">%s</text>\n",
                     x + 4.0, y + 12.0, quadra_obter_cep(quadra)) < 0) {
             fclose(arquivo);
-            liberar_quadras_clonadas(quadras);
+            trata_geo_liberar_quadras(quadras);
             return false;
         }
 
@@ -478,7 +448,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                         anotacao->x1, anotacao->y1, anotacao->x2, anotacao->y2,
                         anotacao->cor) < 0) {
                 fclose(arquivo);
-                liberar_quadras_clonadas(quadras);
+                trata_geo_liberar_quadras(quadras);
                 return false;
             }
         } else if (anotacao->tipo == ANOTACAO_TEXTO) {
@@ -491,7 +461,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                         anotacao->tamanho_fonte, anotacao->cor,
                         anotacao->conteudo) < 0) {
                 fclose(arquivo);
-                liberar_quadras_clonadas(quadras);
+                trata_geo_liberar_quadras(quadras);
                 return false;
             }
         } else if (anotacao->tipo == ANOTACAO_RETANGULO) {
@@ -501,7 +471,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                         anotacao->x1, anotacao->y1, anotacao->x2, anotacao->y2,
                         anotacao->preenchimento, anotacao->cor) < 0) {
                 fclose(arquivo);
-                liberar_quadras_clonadas(quadras);
+                trata_geo_liberar_quadras(quadras);
                 return false;
             }
         } else if (anotacao->tipo == ANOTACAO_CIRCULO) {
@@ -511,7 +481,7 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
                         anotacao->x1, anotacao->y1, anotacao->raio,
                         anotacao->preenchimento, anotacao->cor) < 0) {
                 fclose(arquivo);
-                liberar_quadras_clonadas(quadras);
+                trata_geo_liberar_quadras(quadras);
                 return false;
             }
         }
@@ -521,12 +491,12 @@ static bool escrever_svg_final(TrataQryImpl *trata_qry) {
 
     if (fprintf(arquivo, "</svg>\n") < 0) {
         fclose(arquivo);
-        liberar_quadras_clonadas(quadras);
+        trata_geo_liberar_quadras(quadras);
         return false;
     }
 
     fclose(arquivo);
-    liberar_quadras_clonadas(quadras);
+    trata_geo_liberar_quadras(quadras);
     return true;
 }
 
@@ -556,26 +526,6 @@ static bool escrever_dados_habitante(FILE *txt, Habitante habitante,
     }
 
     return fprintf(txt, "situacao: sem-teto\n") >= 0;
-}
-
-static bool interpretar_face_token(const char *token, char *face_out) {
-    const char *prefixo = "Face.";
-
-    if (token == NULL || face_out == NULL) {
-        return false;
-    }
-
-    if (strlen(token) == 1u) {
-        *face_out = token[0];
-        return true;
-    }
-
-    if (strncmp(token, prefixo, strlen(prefixo)) == 0 && strlen(token) == 6u) {
-        *face_out = token[5];
-        return true;
-    }
-
-    return false;
 }
 
 static bool calcular_ponto_endereco(TrataQryImpl *trata_qry, const char *cep, char face,
@@ -837,10 +787,19 @@ static bool executar_mud(TrataQryImpl *trata_qry, FILE *txt, const char *linha) 
         return false;
     }
 
+    face = '\0';
     if (sscanf(linha, "mud %127s %127s %127s %d %127s %n",
                cpf, cep, face_token, &num, compl, &pos) != 5 ||
-        !interpretar_face_token(face_token, &face) ||
         !arquivo_resto_valido(linha + pos)) {
+        return false;
+    }
+
+    if (strlen(face_token) != 1u) {
+        return false;
+    }
+
+    face = (char)toupper((unsigned char)face_token[0]);
+    if (face != 'N' && face != 'S' && face != 'L' && face != 'O') {
         return false;
     }
 
@@ -942,14 +901,14 @@ static bool executar_rq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     }
 
     if (!trata_geo_remover_quadra(trata_qry->trata_geo, cep)) {
-        liberar_habitantes_clonados(afetados);
+        trata_pm_liberar_habitantes(afetados);
         quadra_destruir(quadra);
         return false;
     }
 
     if (listaVazia(afetados)) {
         if (fprintf(txt, "nenhum morador afetado\n") < 0) {
-            liberar_habitantes_clonados(afetados);
+            trata_pm_liberar_habitantes(afetados);
             quadra_destruir(quadra);
             return false;
         }
@@ -960,7 +919,7 @@ static bool executar_rq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
             if (fprintf(txt, "%s %s %s\n", habitante_obter_cpf(habitante),
                         habitante_obter_nome(habitante),
                         habitante_obter_sobrenome(habitante)) < 0) {
-                liberar_habitantes_clonados(afetados);
+                trata_pm_liberar_habitantes(afetados);
                 quadra_destruir(quadra);
                 return false;
             }
@@ -975,12 +934,12 @@ static bool executar_rq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
         !adicionar_linha_svg(trata_qry, quadra_obter_x(quadra) - quadra_obter_w(quadra),
                              quadra_obter_y(quadra), quadra_obter_x(quadra),
                              quadra_obter_y(quadra) - quadra_obter_h(quadra), "red")) {
-        liberar_habitantes_clonados(afetados);
+        trata_pm_liberar_habitantes(afetados);
         quadra_destruir(quadra);
         return false;
     }
 
-    liberar_habitantes_clonados(afetados);
+    trata_pm_liberar_habitantes(afetados);
     quadra_destruir(quadra);
     return true;
 }
@@ -1017,7 +976,7 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
 
     contar_moradores_da_quadra(habitantes, cep, &contagem);
     if (!escrever_cabecalho_consulta(txt, linha)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
@@ -1032,14 +991,14 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     snprintf(buffer, sizeof(buffer), "%d", contagem.norte);
     if (!adicionar_texto_svg(trata_qry, centro_x, base - TRATA_QRY_MARGEM_TEXTO_FACE,
                              "middle", "black", buffer)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
     snprintf(buffer, sizeof(buffer), "%d", contagem.sul);
     if (!adicionar_texto_svg(trata_qry, centro_x, topo + 12.0, "middle", "black", buffer)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
@@ -1047,7 +1006,7 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     snprintf(buffer, sizeof(buffer), "%d", contagem.leste);
     if (!adicionar_texto_svg(trata_qry, esquerda + TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
                              "start", "black", buffer)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
@@ -1055,7 +1014,7 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     snprintf(buffer, sizeof(buffer), "%d", contagem.oeste);
     if (!adicionar_texto_svg(trata_qry, direita - TRATA_QRY_MARGEM_TEXTO_FACE, centro_y,
                              "end", "black", buffer)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
@@ -1063,12 +1022,12 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     snprintf(buffer, sizeof(buffer), "%d", contagem.total);
     if (!adicionar_texto_svg(trata_qry, centro_x, centro_y + 4.0, "middle", "black",
                              buffer)) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         quadra_destruir(quadra);
         return false;
     }
 
-    liberar_habitantes_clonados(habitantes);
+    trata_pm_liberar_habitantes(habitantes);
     quadra_destruir(quadra);
     return true;
 }
@@ -1125,11 +1084,11 @@ static bool executar_censo(TrataQryImpl *trata_qry, FILE *txt, const char *linha
                                     estatisticas.sem_teto_total),
                 calcular_percentual(estatisticas.sem_teto_mulheres,
                                     estatisticas.sem_teto_total)) < 0) {
-        liberar_habitantes_clonados(habitantes);
+        trata_pm_liberar_habitantes(habitantes);
         return false;
     }
 
-    liberar_habitantes_clonados(habitantes);
+    trata_pm_liberar_habitantes(habitantes);
     return true;
 }
 

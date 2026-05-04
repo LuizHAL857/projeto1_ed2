@@ -108,6 +108,7 @@ bool trata_pm_remover_habitante(TrataPm trata_pm, const char *cpf);
  * Retorna NULL em caso de erro.
  */
 Lista trata_pm_listar_habitantes(TrataPm trata_pm);
+void trata_pm_liberar_habitantes(Lista habitantes);
 
 /*
  * Remove a moradia de todos os moradores vinculados a um CEP.

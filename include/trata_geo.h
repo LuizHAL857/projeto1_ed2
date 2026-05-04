@@ -72,6 +72,7 @@ const char *trata_geo_obter_nome_geo(TrataGeo trata_geo);
  * Retorna NULL em caso de erro.
  */
 Lista trata_geo_listar_quadras(TrataGeo trata_geo);
+void trata_geo_liberar_quadras(Lista quadras);
 
 /*
  * Remove a quadra de um CEP do estado atual.

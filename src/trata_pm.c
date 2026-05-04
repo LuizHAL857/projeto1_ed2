@@ -64,6 +64,10 @@ void trata_pm_destruir(TrataPm trata_pm) {
     destruir_impl(trata_pm_impl(trata_pm), false);
 }
 
+void trata_pm_liberar_habitantes(Lista habitantes) {
+    liberar_habitantes_em_memoria(habitantes);
+}
+
 Habitante trata_pm_obter_habitante(TrataPm trata_pm, const char *cpf) {
     TrataPmImpl *impl = trata_pm_impl(trata_pm);
     size_t tamanho_registro;

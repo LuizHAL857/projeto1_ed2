@@ -105,6 +105,10 @@ void trata_geo_destruir(TrataGeo trata_geo) {
     destruir_impl(trata_geo_impl(trata_geo), false);
 }
 
+void trata_geo_liberar_quadras(Lista quadras) {
+    liberar_quadras_em_memoria(quadras);
+}
+
 Quadra trata_geo_obter_quadra(TrataGeo trata_geo, const char *cep) {
     TrataGeoImpl *impl = trata_geo_impl(trata_geo);
     size_t tamanho_registro;
