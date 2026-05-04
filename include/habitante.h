@@ -14,10 +14,6 @@
  *
  * A interface publica usa apenas um tipo opaco.
  *
- *
- * A conversao entre essas duas representacoes acontece por meio de:
- * - `habitante_escrever_registro(...)`
- * - `habitante_criar_de_bytes(...)`
  */
 
 #include "hash_extensivel.h"
@@ -94,6 +90,7 @@ bool habitante_eh_morador(Habitante habitante);
  * - retorna '\0' se habitante for NULL
  */
 
+ //Funções que obtem os atributos do habitante. Para strings, pode retornar NULL se o habitante for inválido. Para sexo, retorna 'M' ou 'F', ou '\0' se o habitante for NULL.
  const char *habitante_obter_cpf(Habitante habitante);
  const char *habitante_obter_nome(Habitante habitante);
  const char *habitante_obter_sobrenome(Habitante habitante);

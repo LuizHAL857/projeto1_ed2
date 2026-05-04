@@ -111,7 +111,7 @@ void test_processa_geo_deve_gerar_svg_inicial_e_permitir_busca_por_cep(void) {
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
 
-    processamento = processa_geo(dados_geo, DIR_SAIDA);
+    processamento = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento);
     TEST_ASSERT_EQUAL_STRING("trata_geo_entrada", trata_geo_obter_nome_geo(processamento));
 
@@ -175,7 +175,7 @@ void test_processa_geo_deve_aceitar_cep_com_ponto(void) {
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
 
-    processamento = processa_geo(dados_geo, DIR_SAIDA);
+    processamento = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento);
 
     quadra = trata_geo_obter_quadra(processamento, "b01.1");
@@ -206,7 +206,7 @@ void test_processa_geo_deve_ignorar_linhas_vazias_e_comentarios(void) {
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
 
-    processamento = processa_geo(dados_geo, DIR_SAIDA);
+    processamento = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento);
 
     quadra = trata_geo_obter_quadra(processamento, "C1");
@@ -225,7 +225,7 @@ void test_processa_geo_deve_falhar_para_comando_invalido_sem_deixar_saida_valida
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
 
-    processamento = processa_geo(dados_geo, DIR_SAIDA);
+    processamento = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_SVG));
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_DUMP));
@@ -239,7 +239,7 @@ void test_processa_geo_deve_falhar_para_cep_duplicado(void) {
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
 
-    processamento = processa_geo(dados_geo, DIR_SAIDA);
+    processamento = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_SVG));
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_DUMP));

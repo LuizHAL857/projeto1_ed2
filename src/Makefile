@@ -19,16 +19,16 @@ APP_SRCS = $(SRC_DIR)/main.c \
 	$(SRC_DIR)/lista.c \
 	$(SRC_DIR)/leitor_arquivos.c
 
-APP_OBJS = $(BUILD_DIR)/main.o \
-	$(BUILD_DIR)/trata_argumentos.o \
-	$(BUILD_DIR)/trata_geo.o \
-	$(BUILD_DIR)/trata_pm.o \
-	$(BUILD_DIR)/trata_qry.o \
-	$(BUILD_DIR)/hash_extensivel.o \
-	$(BUILD_DIR)/quadra.o \
-	$(BUILD_DIR)/habitante.o \
-	$(BUILD_DIR)/lista.o \
-	$(BUILD_DIR)/leitor_arquivos.o
+APP_OBJS = $(SRC_DIR)/main.o \
+	$(SRC_DIR)/trata_argumentos.o \
+	$(SRC_DIR)/trata_geo.o \
+	$(SRC_DIR)/trata_pm.o \
+	$(SRC_DIR)/trata_qry.o \
+	$(SRC_DIR)/hash_extensivel.o \
+	$(SRC_DIR)/quadra.o \
+	$(SRC_DIR)/habitante.o \
+	$(SRC_DIR)/lista.o \
+	$(SRC_DIR)/leitor_arquivos.o
 
 TEST_HASH_BIN = $(BUILD_DIR)/test_hash_extensivel
 TEST_QUADRA_BIN = $(BUILD_DIR)/test_quadra
@@ -50,34 +50,34 @@ $(APP): $(APP_OBJS)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
+$(SRC_DIR)/main.o: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/trata_argumentos.o: $(SRC_DIR)/trata_argumentos.c ../include/trata_argumentos.h | $(BUILD_DIR)
+$(SRC_DIR)/trata_argumentos.o: $(SRC_DIR)/trata_argumentos.c ../include/trata_argumentos.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/trata_geo.o: $(SRC_DIR)/trata_geo.c ../include/trata_geo.h ../include/hash_extensivel.h ../include/leitor_arquivos.h ../include/quadra.h ../include/lista.h | $(BUILD_DIR)
+$(SRC_DIR)/trata_geo.o: $(SRC_DIR)/trata_geo.c ../include/trata_geo.h ../include/hash_extensivel.h ../include/leitor_arquivos.h ../include/quadra.h ../include/lista.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/trata_pm.o: $(SRC_DIR)/trata_pm.c ../include/trata_pm.h ../include/trata_geo.h ../include/habitante.h ../include/hash_extensivel.h ../include/leitor_arquivos.h ../include/lista.h ../include/quadra.h | $(BUILD_DIR)
+$(SRC_DIR)/trata_pm.o: $(SRC_DIR)/trata_pm.c ../include/trata_pm.h ../include/trata_geo.h ../include/habitante.h ../include/hash_extensivel.h ../include/leitor_arquivos.h ../include/lista.h ../include/quadra.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/trata_qry.o: $(SRC_DIR)/trata_qry.c ../include/trata_qry.h ../include/trata_pm.h ../include/trata_geo.h ../include/leitor_arquivos.h ../include/lista.h ../include/quadra.h ../include/habitante.h | $(BUILD_DIR)
+$(SRC_DIR)/trata_qry.o: $(SRC_DIR)/trata_qry.c ../include/trata_qry.h ../include/trata_pm.h ../include/trata_geo.h ../include/leitor_arquivos.h ../include/lista.h ../include/quadra.h ../include/habitante.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/hash_extensivel.o: $(SRC_DIR)/hash_extensivel.c ../include/hash_extensivel.h | $(BUILD_DIR)
+$(SRC_DIR)/hash_extensivel.o: $(SRC_DIR)/hash_extensivel.c ../include/hash_extensivel.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/quadra.o: $(SRC_DIR)/quadra.c ../include/quadra.h | $(BUILD_DIR)
+$(SRC_DIR)/quadra.o: $(SRC_DIR)/quadra.c ../include/quadra.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/habitante.o: $(SRC_DIR)/habitante.c ../include/habitante.h | $(BUILD_DIR)
+$(SRC_DIR)/habitante.o: $(SRC_DIR)/habitante.c ../include/habitante.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/lista.o: $(SRC_DIR)/lista.c ../include/lista.h | $(BUILD_DIR)
+$(SRC_DIR)/lista.o: $(SRC_DIR)/lista.c ../include/lista.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/leitor_arquivos.o: $(SRC_DIR)/leitor_arquivos.c ../include/leitor_arquivos.h ../include/lista.h | $(BUILD_DIR)
+$(SRC_DIR)/leitor_arquivos.o: $(SRC_DIR)/leitor_arquivos.c ../include/leitor_arquivos.h ../include/lista.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TEST_HASH_BIN): $(SRC_DIR)/hash_extensivel.c $(TEST_DIR)/test_hash_extensivel.c $(UNITY_DIR)/unity.c ../include/hash_extensivel.h | $(BUILD_DIR)
@@ -121,4 +121,4 @@ run-tests: test
 	./$(TEST_LEITOR_BIN)
 
 clean:
-	rm -rf $(BUILD_DIR) $(APP)
+	rm -rf $(BUILD_DIR) $(APP) $(APP_OBJS)

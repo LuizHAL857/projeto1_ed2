@@ -11,11 +11,6 @@
  * - espessura da borda `sw`
  * - cor de preenchimento `cfill`
  * - cor da borda `cstrk`
- *
- * A interface publica expõe apenas um tipo opaco para uso no restante do
- * projeto. O formato persistido da quadra fica escondido na implementacao e e
- * acessado por meio de funcoes que escrevem e leem um bloco fixo de bytes,
- * compativel com o modulo `hash_extensivel`.
  */
 
 #include "hash_extensivel.h"

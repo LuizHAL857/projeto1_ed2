@@ -70,22 +70,13 @@ typedef struct {
 static TrataQryImpl *trata_qry_impl(TrataQry trata_qry) {
     return (TrataQryImpl *)trata_qry;
 }
-
-static const char *pular_espacos(const char *texto);
-static bool linha_ignorada(const char *linha);
-static bool resto_valido(const char *trecho);
-static bool termina_com(const char *texto, const char *sufixo);
-
-static char *extrair_nome_base_qry(const char *nome_arquivo);
-static char *montar_caminho_saida_composto(const char *diretorio, const char *base1,
-                                           const char *separador, const char *base2,
-                                           const char *sufixo);
-
+//FUnções de liberar memória
 static void liberar_habitantes_clonados(Lista habitantes);
 static void liberar_quadras_clonadas(Lista quadras);
 static void liberar_anotacoes(Lista anotacoes);
 static void destruir_impl(TrataQryImpl *trata_qry, bool remover_arquivos);
 
+//Funções de adição de formas ao svg
 static bool adicionar_linha_svg(TrataQryImpl *trata_qry, double x1, double y1,
                                 double x2, double y2, const char *cor);
 static bool adicionar_retangulo_svg(TrataQryImpl *trata_qry, double x, double y,
@@ -118,7 +109,7 @@ static void contar_moradores_da_quadra(Lista habitantes, const char *cep,
                                        ContagemQuadra *contagem);
 static void calcular_censo(Lista habitantes, EstatisticasCenso *estatisticas);
 static double calcular_percentual(int parte, int total);
-
+//Execução de comandos
 static bool executar_h(TrataQryImpl *trata_qry, FILE *txt, const char *linha);
 static bool executar_nasc(TrataQryImpl *trata_qry, FILE *txt, const char *linha);
 static bool executar_rip(TrataQryImpl *trata_qry, FILE *txt, const char *linha);
@@ -159,107 +150,6 @@ void trata_qry_destruir(TrataQry trata_qry) {
 const char *trata_qry_obter_nome_qry(TrataQry trata_qry) {
     TrataQryImpl *impl = trata_qry_impl(trata_qry);
     return impl == NULL ? NULL : impl->nome_qry;
-}
-
-static const char *pular_espacos(const char *texto) {
-    while (texto != NULL && *texto != '\0' && isspace((unsigned char)*texto) != 0) {
-        texto++;
-    }
-
-    return texto;
-}
-
-static bool linha_ignorada(const char *linha) {
-    const char *cursor = pular_espacos(linha);
-    return cursor != NULL && (*cursor == '\0' || *cursor == '#');
-}
-
-static bool resto_valido(const char *trecho) {
-    trecho = pular_espacos(trecho);
-    return trecho != NULL && (*trecho == '\0' || *trecho == '#');
-}
-
-static bool termina_com(const char *texto, const char *sufixo) {
-    size_t tamanho_texto;
-    size_t tamanho_sufixo;
-
-    if (texto == NULL || sufixo == NULL) {
-        return false;
-    }
-
-    tamanho_texto = strlen(texto);
-    tamanho_sufixo = strlen(sufixo);
-    if (tamanho_texto < tamanho_sufixo) {
-        return false;
-    }
-
-    return strcmp(texto + tamanho_texto - tamanho_sufixo, sufixo) == 0;
-}
-
-static char *extrair_nome_base_qry(const char *nome_arquivo) {
-    size_t tamanho_base;
-    char *nome_base;
-
-    if (!termina_com(nome_arquivo, ".qry")) {
-        return NULL;
-    }
-
-    tamanho_base = strlen(nome_arquivo) - 4u;
-    if (tamanho_base == 0u) {
-        return NULL;
-    }
-
-    nome_base = (char *)calloc(tamanho_base + 1u, sizeof(char));
-    if (nome_base == NULL) {
-        return NULL;
-    }
-
-    memcpy(nome_base, nome_arquivo, tamanho_base);
-    return nome_base;
-}
-
-static char *montar_caminho_saida_composto(const char *diretorio, const char *base1,
-                                           const char *separador, const char *base2,
-                                           const char *sufixo) {
-    size_t tamanho_diretorio;
-    size_t tamanho_base1;
-    size_t tamanho_sep;
-    size_t tamanho_base2;
-    size_t tamanho_sufixo;
-    bool precisa_barra;
-    char *caminho;
-
-    if (diretorio == NULL || base1 == NULL || separador == NULL || base2 == NULL ||
-        sufixo == NULL) {
-        return NULL;
-    }
-
-    tamanho_diretorio = strlen(diretorio);
-    tamanho_base1 = strlen(base1);
-    tamanho_sep = strlen(separador);
-    tamanho_base2 = strlen(base2);
-    tamanho_sufixo = strlen(sufixo);
-    precisa_barra = tamanho_diretorio > 0u && diretorio[tamanho_diretorio - 1u] != '/';
-
-    caminho = (char *)malloc(tamanho_diretorio + (precisa_barra ? 1u : 0u) +
-                             tamanho_base1 + tamanho_sep + tamanho_base2 +
-                             tamanho_sufixo + 1u);
-    if (caminho == NULL) {
-        return NULL;
-    }
-
-    memcpy(caminho, diretorio, tamanho_diretorio);
-    if (precisa_barra) {
-        caminho[tamanho_diretorio] = '/';
-        tamanho_diretorio++;
-    }
-    memcpy(caminho + tamanho_diretorio, base1, tamanho_base1);
-    memcpy(caminho + tamanho_diretorio + tamanho_base1, separador, tamanho_sep);
-    memcpy(caminho + tamanho_diretorio + tamanho_base1 + tamanho_sep, base2,
-           tamanho_base2);
-    memcpy(caminho + tamanho_diretorio + tamanho_base1 + tamanho_sep + tamanho_base2,
-           sufixo, tamanho_sufixo + 1u);
-    return caminho;
 }
 
 static void liberar_habitantes_clonados(Lista habitantes) {
@@ -833,7 +723,8 @@ static bool executar_h(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
         return false;
     }
 
-    if (sscanf(linha, "h? %127s %n", cpf, &pos) != 1 || !resto_valido(linha + pos)) {
+    if (sscanf(linha, "h? %127s %n", cpf, &pos) != 1 ||
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -865,7 +756,7 @@ static bool executar_nasc(TrataQryImpl *trata_qry, FILE *txt, const char *linha)
 
     if (sscanf(linha, "nasc %127s %127s %127s %c %127s %n",
                cpf, nome, sobrenome, &sexo, nasc, &pos) != 5 ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -890,7 +781,8 @@ static bool executar_rip(TrataQryImpl *trata_qry, FILE *txt, const char *linha) 
         return false;
     }
 
-    if (sscanf(linha, "rip %127s %n", cpf, &pos) != 1 || !resto_valido(linha + pos)) {
+    if (sscanf(linha, "rip %127s %n", cpf, &pos) != 1 ||
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -948,7 +840,7 @@ static bool executar_mud(TrataQryImpl *trata_qry, FILE *txt, const char *linha) 
     if (sscanf(linha, "mud %127s %127s %127s %d %127s %n",
                cpf, cep, face_token, &num, compl, &pos) != 5 ||
         !interpretar_face_token(face_token, &face) ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -977,7 +869,8 @@ static bool executar_dspj(TrataQryImpl *trata_qry, FILE *txt, const char *linha)
         return false;
     }
 
-    if (sscanf(linha, "dspj %127s %n", cpf, &pos) != 1 || !resto_valido(linha + pos)) {
+    if (sscanf(linha, "dspj %127s %n", cpf, &pos) != 1 ||
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -1023,7 +916,8 @@ static bool executar_rq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     Lista afetados;
     Celula atual;
 
-    if (sscanf(linha, "rq %127s %n", cep, &pos) != 1 || !resto_valido(linha + pos)) {
+    if (sscanf(linha, "rq %127s %n", cep, &pos) != 1 ||
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -1105,7 +999,8 @@ static bool executar_pq(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     double centro_x;
     double centro_y;
 
-    if (sscanf(linha, "pq %127s %n", cep, &pos) != 1 || !resto_valido(linha + pos)) {
+    if (sscanf(linha, "pq %127s %n", cep, &pos) != 1 ||
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -1241,11 +1136,12 @@ static bool executar_censo(TrataQryImpl *trata_qry, FILE *txt, const char *linha
 static bool executa_linha_qry(TrataQryImpl *trata_qry, FILE *txt, const char *linha) {
     const char *cursor;
 
-    if (trata_qry == NULL || txt == NULL || linha == NULL || linha_ignorada(linha)) {
+    if (trata_qry == NULL || txt == NULL || linha == NULL ||
+        arquivo_linha_ignorada(linha)) {
         return true;
     }
 
-    cursor = pular_espacos(linha);
+    cursor = arquivo_pular_espacos(linha);
     if (strncmp(cursor, "h?", 2u) == 0 && isspace((unsigned char)cursor[2]) != 0) {
         return executar_h(trata_qry, txt, cursor);
     }
@@ -1323,6 +1219,7 @@ static bool preparar_estrutura(TrataQryImpl *trata_qry, DadosDoArquivo dados_qry
                                const char *caminho_output) {
     const char *nome_qry_arquivo;
     const char *nome_geo;
+    char *nome_base_saida;
 
     if (trata_qry == NULL || dados_qry == NULL || trata_geo == NULL ||
         caminho_output == NULL) {
@@ -1333,18 +1230,22 @@ static bool preparar_estrutura(TrataQryImpl *trata_qry, DadosDoArquivo dados_qry
     nome_geo = trata_geo_obter_nome_geo(trata_geo);
     trata_qry->trata_geo = trata_geo;
     trata_qry->trata_pm = trata_pm;
-    trata_qry->nome_qry = extrair_nome_base_qry(nome_qry_arquivo);
+    trata_qry->nome_qry = arquivo_extrair_nome_base(nome_qry_arquivo, ".qry");
     trata_qry->anotacoes_svg = criaLista();
     if (trata_qry->nome_qry == NULL || nome_geo == NULL || trata_qry->anotacoes_svg == NULL) {
         return false;
     }
 
+    nome_base_saida = arquivo_montar_nome_composto(nome_geo, "-", trata_qry->nome_qry);
+    if (nome_base_saida == NULL) {
+        return false;
+    }
+
     trata_qry->caminho_svg_final =
-        montar_caminho_saida_composto(caminho_output, nome_geo, "-", trata_qry->nome_qry,
-                                      ".svg");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_saida, ".svg");
     trata_qry->caminho_txt_final =
-        montar_caminho_saida_composto(caminho_output, nome_geo, "-", trata_qry->nome_qry,
-                                      ".txt");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_saida, ".txt");
+    free(nome_base_saida);
 
     return trata_qry->caminho_svg_final != NULL && trata_qry->caminho_txt_final != NULL;
 }

@@ -21,12 +21,18 @@ static const char *DIR_SAIDA = "trata_qry_saida";
 static const char *ARQ_SVG_INICIAL = "trata_qry_saida/trata_qry_entrada.svg";
 static const char *ARQ_SVG_FINAL = "trata_qry_saida/trata_qry_entrada-trata_qry_consultas.svg";
 static const char *ARQ_TXT_FINAL = "trata_qry_saida/trata_qry_entrada-trata_qry_consultas.txt";
-static const char *ARQ_GEO_HASH = "trata_qry_saida/trata_qry_entrada-quadras.hf";
-static const char *ARQ_GEO_CONTROLE = "trata_qry_saida/trata_qry_entrada-quadras.hfc";
-static const char *ARQ_GEO_DUMP = "trata_qry_saida/trata_qry_entrada-quadras.hfd";
-static const char *ARQ_PM_HASH = "trata_qry_saida/trata_qry_pessoas-habitantes.hf";
-static const char *ARQ_PM_CONTROLE = "trata_qry_saida/trata_qry_pessoas-habitantes.hfc";
-static const char *ARQ_PM_DUMP = "trata_qry_saida/trata_qry_pessoas-habitantes.hfd";
+static const char *ARQ_GEO_HASH =
+    "trata_qry_saida/trata_qry_entrada-trata_qry_consultas-quadras.hf";
+static const char *ARQ_GEO_CONTROLE =
+    "trata_qry_saida/trata_qry_entrada-trata_qry_consultas-quadras.hfc";
+static const char *ARQ_GEO_DUMP =
+    "trata_qry_saida/trata_qry_entrada-trata_qry_consultas-quadras.hfd";
+static const char *ARQ_PM_HASH =
+    "trata_qry_saida/trata_qry_pessoas-trata_qry_consultas-habitantes.hf";
+static const char *ARQ_PM_CONTROLE =
+    "trata_qry_saida/trata_qry_pessoas-trata_qry_consultas-habitantes.hfc";
+static const char *ARQ_PM_DUMP =
+    "trata_qry_saida/trata_qry_pessoas-trata_qry_consultas-habitantes.hfd";
 
 static TrataGeo processamento_geo;
 static TrataPm processamento_pm;
@@ -161,12 +167,13 @@ void test_processa_qry_deve_executar_rq_pq_e_censo(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -272,12 +279,13 @@ void test_processa_qry_deve_ignorar_linhas_vazias_e_comentarios(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -319,12 +327,13 @@ void test_processa_qry_deve_posicionar_faces_conforme_orientacao_visual_do_svg(v
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -375,12 +384,13 @@ void test_processa_qry_deve_executar_h_nasc_rip_mud_e_dspj(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -451,12 +461,13 @@ void test_processa_qry_deve_aceitar_dspj_repetido_sem_abortar_processamento(void
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -502,12 +513,13 @@ void test_processa_qry_deve_aceitar_rip_repetido_sem_abortar_processamento(void)
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -551,12 +563,13 @@ void test_processa_qry_deve_aceitar_mud_com_face_no_formato_face_ponto(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);
@@ -595,12 +608,13 @@ void test_processa_qry_deve_falhar_para_comando_invalido_sem_deixar_saidas(void)
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA,
+                                   "trata_qry_consultas");
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     dados_qry = criar_dados_arquivo((char *)ARQ_QRY);

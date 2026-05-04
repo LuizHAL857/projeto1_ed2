@@ -9,6 +9,7 @@
  * criação e a destruição dessas estruturas auxiliares.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include "../include/lista.h"
 /* Tipo opaco para os dados carregados de um arquivo. */
@@ -52,5 +53,19 @@ char *obter_nome_arquivo(DadosDoArquivo dadosArquivo);
   * @return Lista contendo as linhas do arquivo.
   */
 Lista obter_lista_linhas(DadosDoArquivo dadosArquivo);
+
+/*
+ * Helpers de texto e caminhos compartilhados entre os modulos de leitura e
+ * processamento de arquivos.
+ */
+const char *arquivo_pular_espacos(const char *texto);
+bool arquivo_linha_ignorada(const char *linha);
+bool arquivo_resto_valido(const char *trecho);
+bool arquivo_termina_com(const char *texto, const char *sufixo);
+char *arquivo_extrair_nome_base(const char *caminho_ou_nome, const char *extensao);
+char *arquivo_montar_nome_composto(const char *base1, const char *separador,
+                                   const char *base2);
+char *arquivo_montar_caminho_saida(const char *diretorio, const char *nome_base,
+                                   const char *sufixo);
 
 #endif

@@ -132,12 +132,12 @@ void test_processa_pm_deve_persistir_habitantes_e_moradias(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_pm);
     TEST_ASSERT_EQUAL_STRING("trata_pm_entrada", trata_pm_obter_nome_pm(processamento_pm));
 
@@ -191,12 +191,12 @@ void test_processa_pm_deve_ignorar_linhas_vazias_e_comentarios(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     habitante = trata_pm_obter_habitante(processamento_pm, "cpf-003");
@@ -218,12 +218,12 @@ void test_processa_pm_deve_aceitar_cpf_formatado_com_pontos(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_pm);
 
     habitante = trata_pm_obter_habitante(processamento_pm, "000.000.001-91");
@@ -243,12 +243,12 @@ void test_processa_pm_deve_falhar_quando_moradia_referencia_habitante_inexistent
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento_pm);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_PM_HAB_HASH));
 }
@@ -264,12 +264,12 @@ void test_processa_pm_deve_falhar_quando_moradia_referencia_cep_inexistente(void
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento_pm);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_PM_HAB_HASH));
 }
@@ -285,12 +285,12 @@ void test_processa_pm_deve_falhar_para_cpf_duplicado(void) {
 
     dados_geo = criar_dados_arquivo((char *)ARQ_GEO);
     TEST_ASSERT_NOT_NULL(dados_geo);
-    processamento_geo = processa_geo(dados_geo, DIR_SAIDA);
+    processamento_geo = processa_geo(dados_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NOT_NULL(processamento_geo);
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, processamento_geo, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento_pm);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_PM_HAB_HASH));
 }
@@ -302,7 +302,7 @@ void test_processa_pm_deve_falhar_sem_trata_geo(void) {
 
     dados_pm = criar_dados_arquivo((char *)ARQ_PM);
     TEST_ASSERT_NOT_NULL(dados_pm);
-    processamento_pm = processa_pm(dados_pm, NULL, DIR_SAIDA);
+    processamento_pm = processa_pm(dados_pm, NULL, DIR_SAIDA, NULL);
     TEST_ASSERT_NULL(processamento_pm);
     TEST_ASSERT_FALSE(arquivo_existe(ARQ_PM_HAB_HASH));
 }

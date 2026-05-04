@@ -28,6 +28,8 @@ typedef void *TrataPm;
  * - habitantes sao persistidos em `<base>-habitantes.hf`
  * - o dump textual `<base>-habitantes.hfd` e gerado apenas ao final da
  *   execucao, durante `trata_pm_destruir(...)`
+ * - se houver um `.qry`, os arquivos `.hf`, `.hfc` e `.hfd` passam a usar o
+ *   prefixo `<base-do-pm>-<nome-base-do-qry>`
  * - comandos `m` validam se o habitante existe
  * - comandos `m` validam se a quadra do CEP informado existe no estado
  *   carregado do `.geo`
@@ -37,9 +39,11 @@ typedef void *TrataPm;
  * - dados_pm: arquivo `.pm` previamente carregado
  * - trata_geo: estado do `.geo`, obrigatorio para validar CEPs dos moradores
  * - caminho_output: diretorio onde os arquivos persistentes devem ser criados
+ * - nome_qry: nome-base opcional do `.qry`, usado apenas para os arquivos
+ *   persistentes `.hf`, `.hfc` e `.hfd`
  */
 TrataPm processa_pm(DadosDoArquivo dados_pm, TrataGeo trata_geo,
-                    const char *caminho_output);
+                    const char *caminho_output, const char *nome_qry);
 
 /*
  * Libera os recursos em memoria e fecha arquivos associados ao processamento.

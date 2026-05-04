@@ -3,10 +3,9 @@
 
 /*
  * Modulo responsavel por processar integralmente um arquivo `.geo`.
- *
- * O contrato publico foi mantido enxuto:
+ 
  * - `processa_geo(...)` executa todos os comandos do `.geo` e gera o SVG
- *   inicial, alem do dump textual `.hfd` da hash de quadras
+ *   inicial
  * - `trata_geo_destruir(...)` desaloca o estado criado
  * - `trata_geo_obter_quadra(...)` permite acesso por CEP
  * - `trata_geo_obter_nome_geo(...)` expoe o nome-base do `.geo`, util para os
@@ -28,13 +27,18 @@ typedef void *TrataGeo;
  * - as quadras sao mantidas em hashfile no diretorio de saida
  * - o dump textual `<nome-base-do-geo>-quadras.hfd` e gerado apenas ao final
  *   da execucao, durante `trata_geo_destruir(...)`
+ * - se houver um `.qry`, os arquivos `.hf`, `.hfc` e `.hfd` passam a usar o
+ *   prefixo `<nome-base-do-geo>-<nome-base-do-qry>`
  * - em caso de falha, retorna NULL
  *
  * Parametros:
  * - dados_geo: arquivo `.geo` previamente carregado
  * - caminho_output: diretorio onde os arquivos de saida devem ser criados
+ * - nome_qry: nome-base opcional do `.qry`, usado apenas para os arquivos
+ *   persistentes `.hf`, `.hfc` e `.hfd`
  */
-TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output);
+TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output,
+                      const char *nome_qry);
 
 /*
  * Libera os recursos em memoria e fecha arquivos associados ao processamento.

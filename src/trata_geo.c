@@ -40,25 +40,6 @@ static bool texto_valido(const char *texto, size_t tamanho_maximo);
 /* Copia uma string para um buffer de destino com checagem de tamanho. */
 static bool copiar_texto(char *destino, size_t tamanho_destino, const char *origem);
 
-/* Avanca o cursor ate o primeiro caractere nao branco. */
-static const char *pular_espacos(const char *texto);
-
-/* Identifica linhas vazias ou comentarios do arquivo .geo. */
-static bool linha_ignorada(const char *linha);
-
-/* Verifica se o restante da linha esta vazio ou comentado. */
-static bool resto_valido(const char *trecho);
-
-/* Confere se um texto termina com um dado sufixo. */
-static bool termina_com(const char *texto, const char *sufixo);
-
-/* Extrai o nome-base do arquivo .geo, sem extensao. */
-static char *extrair_nome_base_geo(const char *nome_arquivo);
-
-/* Monta um caminho de saida concatenando diretorio, base e sufixo. */
-static char *montar_caminho_saida(const char *diretorio, const char *nome_base,
-                                  const char *sufixo);
-
 /* Deriva o caminho do arquivo .hfc a partir do .hf. */
 static char *montar_caminho_controle(const char *caminho_hash);
 
@@ -99,9 +80,10 @@ static bool escrever_svg_inicial(TrataGeoImpl *trata_geo);
 
 /* Inicializa caminhos, listas, estilo e hash usados pelo processamento. */
 static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo,
-                               const char *caminho_output);
+                               const char *caminho_output, const char *nome_qry);
 
-TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output) {
+TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output,
+                      const char *nome_qry) {
     TrataGeoImpl *trata_geo;
 
     trata_geo = (TrataGeoImpl *)calloc(1, sizeof(TrataGeoImpl));
@@ -109,7 +91,7 @@ TrataGeo processa_geo(DadosDoArquivo dados_geo, const char *caminho_output) {
         return NULL;
     }
 
-    if (!preparar_estrutura(trata_geo, dados_geo, caminho_output) ||
+    if (!preparar_estrutura(trata_geo, dados_geo, caminho_output, nome_qry) ||
         !processar_linhas_geo(trata_geo, dados_geo) ||
         !escrever_svg_inicial(trata_geo)) {
         destruir_impl(trata_geo, true);
@@ -254,101 +236,11 @@ static bool copiar_texto(char *destino, size_t tamanho_destino, const char *orig
     return true;
 }
 
-static const char *pular_espacos(const char *texto) {
-    while (texto != NULL && *texto != '\0' && isspace((unsigned char)*texto) != 0) {
-        texto++;
-    }
-
-    return texto;
-}
-
-static bool linha_ignorada(const char *linha) {
-    const char *cursor = pular_espacos(linha);
-    return cursor != NULL && (*cursor == '\0' || *cursor == '#');
-}
-
-static bool resto_valido(const char *trecho) {
-    trecho = pular_espacos(trecho);
-    return trecho != NULL && (*trecho == '\0' || *trecho == '#');
-}
-
-static bool termina_com(const char *texto, const char *sufixo) {
-    size_t tamanho_texto;
-    size_t tamanho_sufixo;
-
-    if (texto == NULL || sufixo == NULL) {
-        return false;
-    }
-
-    tamanho_texto = strlen(texto);
-    tamanho_sufixo = strlen(sufixo);
-    if (tamanho_texto < tamanho_sufixo) {
-        return false;
-    }
-
-    return strcmp(texto + tamanho_texto - tamanho_sufixo, sufixo) == 0;
-}
-
-static char *extrair_nome_base_geo(const char *nome_arquivo) {
-    size_t tamanho_base;
-    char *nome_base;
-
-    if (!termina_com(nome_arquivo, ".geo")) {
-        return NULL;
-    }
-
-    tamanho_base = strlen(nome_arquivo) - 4u;
-    if (tamanho_base == 0u) {
-        return NULL;
-    }
-
-    nome_base = (char *)calloc(tamanho_base + 1u, sizeof(char));
-    if (nome_base == NULL) {
-        return NULL;
-    }
-
-    memcpy(nome_base, nome_arquivo, tamanho_base);
-    return nome_base;
-}
-
-static char *montar_caminho_saida(const char *diretorio, const char *nome_base,
-                                  const char *sufixo) {
-    size_t tamanho_diretorio;
-    size_t tamanho_base;
-    size_t tamanho_sufixo;
-    bool precisa_barra;
-    char *caminho;
-
-    if (diretorio == NULL || nome_base == NULL || sufixo == NULL) {
-        return NULL;
-    }
-
-    tamanho_diretorio = strlen(diretorio);
-    tamanho_base = strlen(nome_base);
-    tamanho_sufixo = strlen(sufixo);
-    precisa_barra = tamanho_diretorio > 0u && diretorio[tamanho_diretorio - 1u] != '/';
-
-    caminho = (char *)malloc(tamanho_diretorio + (precisa_barra ? 1u : 0u) +
-                             tamanho_base + tamanho_sufixo + 1u);
-    if (caminho == NULL) {
-        return NULL;
-    }
-
-    memcpy(caminho, diretorio, tamanho_diretorio);
-    if (precisa_barra) {
-        caminho[tamanho_diretorio] = '/';
-        tamanho_diretorio++;
-    }
-    memcpy(caminho + tamanho_diretorio, nome_base, tamanho_base);
-    memcpy(caminho + tamanho_diretorio + tamanho_base, sufixo, tamanho_sufixo + 1u);
-    return caminho;
-}
-
 static char *montar_caminho_controle(const char *caminho_hash) {
     size_t tamanho_base;
     char *caminho_controle;
 
-    if (!termina_com(caminho_hash, ".hf")) {
+    if (!arquivo_termina_com(caminho_hash, ".hf")) {
         return NULL;
     }
 
@@ -477,7 +369,7 @@ static bool executa_comando_cq(TrataGeoImpl *trata_geo, const char *linha) {
     int pos = 0;
 
     if (sscanf(linha, "cq %127s %127s %127s %n", sw, cfill, cstrk, &pos) != 3 ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -493,7 +385,7 @@ static bool executa_comando_q(TrataGeoImpl *trata_geo, const char *linha) {
     int pos = 0;
 
     if (sscanf(linha, "q %127s %lf %lf %lf %lf %n", cep, &x, &y, &w, &h, &pos) != 5 ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -503,11 +395,11 @@ static bool executa_comando_q(TrataGeoImpl *trata_geo, const char *linha) {
 static bool executa_linha_geo(TrataGeoImpl *trata_geo, const char *linha) {
     const char *cursor;
 
-    if (trata_geo == NULL || linha == NULL || linha_ignorada(linha)) {
+    if (trata_geo == NULL || linha == NULL || arquivo_linha_ignorada(linha)) {
         return true;
     }
 
-    cursor = pular_espacos(linha);
+    cursor = arquivo_pular_espacos(linha);
     if (strncmp(cursor, "cq", 2u) == 0 && isspace((unsigned char)cursor[2]) != 0) {
         return executa_comando_cq(trata_geo, cursor);
     }
@@ -656,27 +548,37 @@ static bool escrever_svg_inicial(TrataGeoImpl *trata_geo) {
 }
 
 static bool preparar_estrutura(TrataGeoImpl *trata_geo, DadosDoArquivo dados_geo,
-                               const char *caminho_output) {
+                               const char *caminho_output, const char *nome_qry) {
     const char *nome_arquivo_geo;
+    char *nome_base_persistencia;
 
     if (trata_geo == NULL || dados_geo == NULL || caminho_output == NULL) {
         return false;
     }
 
     nome_arquivo_geo = obter_nome_arquivo(dados_geo);
-    trata_geo->nome_geo = extrair_nome_base_geo(nome_arquivo_geo);
+    trata_geo->nome_geo = arquivo_extrair_nome_base(nome_arquivo_geo, ".geo");
     if (trata_geo->nome_geo == NULL) {
         return false;
     }
 
+    nome_base_persistencia =
+        arquivo_montar_nome_composto(trata_geo->nome_geo, "-", nome_qry);
+    if (nome_base_persistencia == NULL) {
+        return false;
+    }
+
     trata_geo->caminho_svg_inicial =
-        montar_caminho_saida(caminho_output, trata_geo->nome_geo, ".svg");
+        arquivo_montar_caminho_saida(caminho_output, trata_geo->nome_geo, ".svg");
     trata_geo->caminho_hash_quadras =
-        montar_caminho_saida(caminho_output, trata_geo->nome_geo, "-quadras.hf");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_persistencia,
+                                     "-quadras.hf");
     trata_geo->caminho_dump_quadras =
-        montar_caminho_saida(caminho_output, trata_geo->nome_geo, "-quadras.hfd");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_persistencia,
+                                     "-quadras.hfd");
     trata_geo->lista_quadras = criaLista();
     trata_geo->lista_svg = criaLista();
+    free(nome_base_persistencia);
 
     if (trata_geo->caminho_svg_inicial == NULL || trata_geo->caminho_hash_quadras == NULL ||
         trata_geo->caminho_dump_quadras == NULL || trata_geo->lista_quadras == NULL ||

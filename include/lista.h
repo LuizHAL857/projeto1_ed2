@@ -22,7 +22,7 @@ typedef void* Lista;
  */
 typedef void* Celula;
 
-/* ================= Criação e liberação ================= */
+
 
 /**
  * @brief Cria uma nova lista duplamente encadeada.
@@ -38,7 +38,7 @@ Lista criaLista();
  */
 void liberaLista(Lista l);
 
-/* ================= Inserção ================= */
+
 
 /**
  * @brief Insere um elemento no início da lista.
@@ -56,7 +56,7 @@ void insereLista(Lista l, void *chave);
  */
 void insereFinalLista(Lista l, void *chave);
 
-/* ================= Remoção ================= */
+
 
 /**
  * @brief Remove o elemento do início da lista.
@@ -101,7 +101,7 @@ bool searchAndRemoveLista(Lista l, void *chave);
  */
 void removeCelula(Lista l, Celula alvo, bool liberarConteudo);
 
-/* ================= Navegação ================= */
+
 
 /**
  * @brief Retorna a primeira célula da lista.
@@ -143,7 +143,7 @@ Celula getAntCelula(Celula c);
  */
 void* getConteudoCelula(Celula c);
 
-/* ================= Utilitários ================= */
+
 
 /**
  * @brief Retorna o tamanho da lista (número de elementos).

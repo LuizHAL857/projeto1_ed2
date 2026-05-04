@@ -24,13 +24,6 @@ static TrataPmImpl *trata_pm_impl(TrataPm trata_pm) {
 }
 
 static Habitante clonar_habitante(Habitante habitante);
-static const char *pular_espacos(const char *texto);
-static bool linha_ignorada(const char *linha);
-static bool resto_valido(const char *trecho);
-static bool termina_com(const char *texto, const char *sufixo);
-static char *extrair_nome_base_pm(const char *nome_arquivo);
-static char *montar_caminho_saida(const char *diretorio, const char *nome_base,
-                                  const char *sufixo);
 static char *montar_caminho_controle(const char *caminho_hash);
 static void liberar_habitantes_em_memoria(Lista habitantes);
 static void destruir_impl(TrataPmImpl *trata_pm, bool remover_arquivos);
@@ -46,10 +39,11 @@ static bool executa_comando_m(TrataPmImpl *trata_pm, const char *linha);
 static bool executa_linha_pm(TrataPmImpl *trata_pm, const char *linha);
 static bool processar_linhas_pm(TrataPmImpl *trata_pm, DadosDoArquivo dados_pm);
 static bool preparar_estrutura(TrataPmImpl *trata_pm, DadosDoArquivo dados_pm,
-                               TrataGeo trata_geo, const char *caminho_output);
+                               TrataGeo trata_geo, const char *caminho_output,
+                               const char *nome_qry);
 
 TrataPm processa_pm(DadosDoArquivo dados_pm, TrataGeo trata_geo,
-                    const char *caminho_output) {
+                    const char *caminho_output, const char *nome_qry) {
     TrataPmImpl *trata_pm;
 
     trata_pm = (TrataPmImpl *)calloc(1, sizeof(TrataPmImpl));
@@ -57,7 +51,7 @@ TrataPm processa_pm(DadosDoArquivo dados_pm, TrataGeo trata_geo,
         return NULL;
     }
 
-    if (!preparar_estrutura(trata_pm, dados_pm, trata_geo, caminho_output) ||
+    if (!preparar_estrutura(trata_pm, dados_pm, trata_geo, caminho_output, nome_qry) ||
         !processar_linhas_pm(trata_pm, dados_pm)) {
         destruir_impl(trata_pm, true);
         return NULL;
@@ -294,101 +288,11 @@ static Habitante clonar_habitante(Habitante habitante) {
     return clone;
 }
 
-static const char *pular_espacos(const char *texto) {
-    while (texto != NULL && *texto != '\0' && isspace((unsigned char)*texto) != 0) {
-        texto++;
-    }
-
-    return texto;
-}
-
-static bool linha_ignorada(const char *linha) {
-    const char *cursor = pular_espacos(linha);
-    return cursor != NULL && (*cursor == '\0' || *cursor == '#');
-}
-
-static bool resto_valido(const char *trecho) {
-    trecho = pular_espacos(trecho);
-    return trecho != NULL && (*trecho == '\0' || *trecho == '#');
-}
-
-static bool termina_com(const char *texto, const char *sufixo) {
-    size_t tamanho_texto;
-    size_t tamanho_sufixo;
-
-    if (texto == NULL || sufixo == NULL) {
-        return false;
-    }
-
-    tamanho_texto = strlen(texto);
-    tamanho_sufixo = strlen(sufixo);
-    if (tamanho_texto < tamanho_sufixo) {
-        return false;
-    }
-
-    return strcmp(texto + tamanho_texto - tamanho_sufixo, sufixo) == 0;
-}
-
-static char *extrair_nome_base_pm(const char *nome_arquivo) {
-    size_t tamanho_base;
-    char *nome_base;
-
-    if (!termina_com(nome_arquivo, ".pm")) {
-        return NULL;
-    }
-
-    tamanho_base = strlen(nome_arquivo) - 3u;
-    if (tamanho_base == 0u) {
-        return NULL;
-    }
-
-    nome_base = (char *)calloc(tamanho_base + 1u, sizeof(char));
-    if (nome_base == NULL) {
-        return NULL;
-    }
-
-    memcpy(nome_base, nome_arquivo, tamanho_base);
-    return nome_base;
-}
-
-static char *montar_caminho_saida(const char *diretorio, const char *nome_base,
-                                  const char *sufixo) {
-    size_t tamanho_diretorio;
-    size_t tamanho_base;
-    size_t tamanho_sufixo;
-    bool precisa_barra;
-    char *caminho;
-
-    if (diretorio == NULL || nome_base == NULL || sufixo == NULL) {
-        return NULL;
-    }
-
-    tamanho_diretorio = strlen(diretorio);
-    tamanho_base = strlen(nome_base);
-    tamanho_sufixo = strlen(sufixo);
-    precisa_barra = tamanho_diretorio > 0u && diretorio[tamanho_diretorio - 1u] != '/';
-
-    caminho = (char *)malloc(tamanho_diretorio + (precisa_barra ? 1u : 0u) +
-                             tamanho_base + tamanho_sufixo + 1u);
-    if (caminho == NULL) {
-        return NULL;
-    }
-
-    memcpy(caminho, diretorio, tamanho_diretorio);
-    if (precisa_barra) {
-        caminho[tamanho_diretorio] = '/';
-        tamanho_diretorio++;
-    }
-    memcpy(caminho + tamanho_diretorio, nome_base, tamanho_base);
-    memcpy(caminho + tamanho_diretorio + tamanho_base, sufixo, tamanho_sufixo + 1u);
-    return caminho;
-}
-
 static char *montar_caminho_controle(const char *caminho_hash) {
     size_t tamanho_base;
     char *caminho_controle;
 
-    if (!termina_com(caminho_hash, ".hf")) {
+    if (!arquivo_termina_com(caminho_hash, ".hf")) {
         return NULL;
     }
 
@@ -560,7 +464,7 @@ static bool executa_comando_p(TrataPmImpl *trata_pm, const char *linha) {
 
     if (sscanf(linha, "p %127s %127s %127s %c %127s %n",
                cpf, nome, sobrenome, &sexo, nasc, &pos) != 5 ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -577,7 +481,7 @@ static bool executa_comando_m(TrataPmImpl *trata_pm, const char *linha) {
 
     if (sscanf(linha, "m %127s %127s %c %d %127s %n",
                cpf, cep, &face, &num, compl, &pos) != 5 ||
-        !resto_valido(linha + pos)) {
+        !arquivo_resto_valido(linha + pos)) {
         return false;
     }
 
@@ -587,11 +491,11 @@ static bool executa_comando_m(TrataPmImpl *trata_pm, const char *linha) {
 static bool executa_linha_pm(TrataPmImpl *trata_pm, const char *linha) {
     const char *cursor;
 
-    if (trata_pm == NULL || linha == NULL || linha_ignorada(linha)) {
+    if (trata_pm == NULL || linha == NULL || arquivo_linha_ignorada(linha)) {
         return true;
     }
 
-    cursor = pular_espacos(linha);
+    cursor = arquivo_pular_espacos(linha);
     if (cursor[0] == 'p' && isspace((unsigned char)cursor[1]) != 0) {
         return executa_comando_p(trata_pm, cursor);
     }
@@ -629,8 +533,10 @@ static bool processar_linhas_pm(TrataPmImpl *trata_pm, DadosDoArquivo dados_pm) 
 }
 
 static bool preparar_estrutura(TrataPmImpl *trata_pm, DadosDoArquivo dados_pm,
-                               TrataGeo trata_geo, const char *caminho_output) {
+                               TrataGeo trata_geo, const char *caminho_output,
+                               const char *nome_qry) {
     const char *nome_arquivo_pm;
+    char *nome_base_persistencia;
 
     if (trata_pm == NULL || dados_pm == NULL || trata_geo == NULL ||
         caminho_output == NULL) {
@@ -639,16 +545,25 @@ static bool preparar_estrutura(TrataPmImpl *trata_pm, DadosDoArquivo dados_pm,
 
     nome_arquivo_pm = obter_nome_arquivo(dados_pm);
     trata_pm->trata_geo = trata_geo;
-    trata_pm->nome_pm = extrair_nome_base_pm(nome_arquivo_pm);
+    trata_pm->nome_pm = arquivo_extrair_nome_base(nome_arquivo_pm, ".pm");
     if (trata_pm->nome_pm == NULL) {
         return false;
     }
 
+    nome_base_persistencia =
+        arquivo_montar_nome_composto(trata_pm->nome_pm, "-", nome_qry);
+    if (nome_base_persistencia == NULL) {
+        return false;
+    }
+
     trata_pm->caminho_hash_habitantes =
-        montar_caminho_saida(caminho_output, trata_pm->nome_pm, "-habitantes.hf");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_persistencia,
+                                     "-habitantes.hf");
     trata_pm->caminho_dump_habitantes =
-        montar_caminho_saida(caminho_output, trata_pm->nome_pm, "-habitantes.hfd");
+        arquivo_montar_caminho_saida(caminho_output, nome_base_persistencia,
+                                     "-habitantes.hfd");
     trata_pm->lista_habitantes = criaLista();
+    free(nome_base_persistencia);
 
     if (trata_pm->caminho_hash_habitantes == NULL ||
         trata_pm->caminho_dump_habitantes == NULL ||
